@@ -1,7 +1,7 @@
 package conmakefile
 
 import(
-  "gopkg.in/yaml.v2"
+  "github.com/cspengl/conmake/pkg/utils"
 )
 
 const(
@@ -15,18 +15,14 @@ const(
 type Conmakefile struct {
   Version string
   Project string
-  Agent map[interface{}]interface{}
-  Steps []interface{}
 }
 
-func Parse(data []byte) Conmakefile {
-  toplevel := make(map[string]interface{})
-  yaml.Unmarshal(data, &toplevel)
+func NewConmakefile(data []byte) Conmakefile {
+
+  yamlFile := utils.Parse(data)
 
   return Conmakefile {
-    Version: toplevel[keyVersion].(string),
-    Project: toplevel[keyProject].(string),
-    Agent: toplevel[keyAgent].(map[interface{}]interface{}),
-    Steps: toplevel[keySteps].([]interface{}),
+    Version: yamlFile.Get(keyVersion).Data().(string),
+    Project: yamlFile.Get(keyProject).Data().(string),
   }
 }

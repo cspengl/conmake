@@ -1,0 +1,12 @@
+Obst:
+  - Apfel
+  - Banane
+  - Traube
+Gemüse:
+  - Paprika:
+      Farben:
+        - rot
+        - gruen
+        - gelb
+    Test: Hallo
+  - Salat

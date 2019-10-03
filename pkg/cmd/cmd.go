@@ -17,10 +17,10 @@ var conmakeCmd = &cobra.Command {
   Long:   `conmake is a command line tool similar to
            make or cmake running the steps inside a docker container`,
   Run: func(cmd *cobra.Command, args[] string){
-    file, _ := ioutil.ReadFile("examples/Conmakefile.yaml")
-    c := conmakefile.Parse(file)
+    f, _ := ioutil.ReadFile("examples/Conmakefile.yaml")
+    c := conmakefile.NewConmakefile(f)
+    fmt.Printf("Version: %v\nProject: %v\n", c.Version, c.Project)
 
-    fmt.Printf("Version: %v\nProject: %v\nAgent: %v\n", c.Version, c.Project, c.Agent)
   },
 }
 
