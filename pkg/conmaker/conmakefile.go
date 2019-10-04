@@ -1,7 +1,7 @@
-package conmakefile
+package conmaker
 
 import(
-  "github.com/cspengl/conmake/pkg/utils"
+  "github.com/cspengl/conmake/pkg/utils/yaml"
 )
 
 const(
@@ -19,10 +19,10 @@ type Conmakefile struct {
 
 func NewConmakefile(data []byte) Conmakefile {
 
-  yamlFile := utils.Parse(data)
+  yamlFile := yaml.Load(data)
 
   return Conmakefile {
-    Version: yamlFile.Get(keyVersion).Data().(string),
-    Project: yamlFile.Get(keyProject).Data().(string),
+    Version: yamlFile.Get(keyVersion).(string),
+    Project: yamlFile.Get(keyProject).(string),
   }
 }

@@ -6,7 +6,8 @@ import (
   "io/ioutil"
 
   "github.com/cspengl/conmake/pkg/cmd/station"
-  "github.com/cspengl/conmake/pkg/conmakefile"
+  "github.com/cspengl/conmake/pkg/conmaker"
+  //"github.com/cspengl/conmake/pkg/utils/yaml"
 
   "github.com/spf13/cobra"
 )
@@ -18,7 +19,7 @@ var conmakeCmd = &cobra.Command {
            make or cmake running the steps inside a docker container`,
   Run: func(cmd *cobra.Command, args[] string){
     f, _ := ioutil.ReadFile("examples/Conmakefile.yaml")
-    c := conmakefile.NewConmakefile(f)
+    c := conmaker.NewConmakefile(f)
     fmt.Printf("Version: %v\nProject: %v\n", c.Version, c.Project)
 
   },
