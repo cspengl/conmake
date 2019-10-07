@@ -11,4 +11,5 @@ var StationCmd = &cobra.Command{
 
 func init(){
   StationCmd.AddCommand(listCmd)
+  StationCmd.AddCommand(initCmd)
 }

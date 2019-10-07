@@ -3,11 +3,9 @@ package cmd
 import (
   "fmt"
   "os"
-  "io/ioutil"
 
   "github.com/cspengl/conmake/pkg/cmd/station"
-  "github.com/cspengl/conmake/pkg/conmaker"
-  //"github.com/cspengl/conmake/pkg/utils/yaml"
+  "github.com/cspengl/conmake/pkg/cmd/do"
 
   "github.com/spf13/cobra"
 )
@@ -17,17 +15,15 @@ var conmakeCmd = &cobra.Command {
   Short:  "Build tool running inside docker container",
   Long:   `conmake is a command line tool similar to
            make or cmake running the steps inside a docker container`,
-  Run: func(cmd *cobra.Command, args[] string){
-    f, _ := ioutil.ReadFile("examples/Conmakefile.yaml")
-    c := conmaker.NewConmakefile(f)
-    fmt.Printf("Version: %v\nProject: %v\n", c.Version, c.Project)
-
+  Run: func(cmd *cobra.Command, args []string){
+    cmd.Help()
   },
 }
 
 func init(){
   conmakeCmd.AddCommand(versionCmd)
   conmakeCmd.AddCommand(station.StationCmd)
+  conmakeCmd.AddCommand(do.DoCmd)
 }
 
 func Execute() {
