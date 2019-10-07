@@ -1,14 +1,14 @@
 ---
 version: v1
 project: helloworld
-agent:
-  docker:
-    api_version: 1.40
-    endpoint: local
 
 steps:
-  - helloworld:
-    base: alpine:latest
+  helloworld:
+    workstation: alpine
     script:
       - echo "Hello World!"
+
+workstations:
+  alpine:
+    base: alpine:latest
 ...

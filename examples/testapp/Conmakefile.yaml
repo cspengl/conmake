@@ -1,0 +1,18 @@
+---
+version: v1
+project: testapp
+
+steps:
+  build:
+    workstation: building
+    script:
+      - gcc -o testapp testapp.c
+    artifacts:
+      - name: binary
+        path: ./testapp
+
+workstations:
+  building:
+    base: gcc:latest
+    preparation:
+...
