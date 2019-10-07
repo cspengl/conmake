@@ -52,7 +52,7 @@ func (a *DockerAgent) InitStation(project, stationname string, s models.Workstat
     ctx,
     &container.Config{
       Image: s.Base,
-      Cmd: ScriptToCmd(s.Preparation),
+      Cmd: models.ScriptToCmd(s.Preparation),
       Tty: true,
       OpenStdin: true,
     },
@@ -97,7 +97,7 @@ func (a *DockerAgent) PerformStep(project, stepname string, s models.Step) error
     ctx,
     &container.Config{
       Image: s.Workstation,
-      Cmd: ScriptToCmd(s.Script),
+      Cmd: models.ScriptToCmd(s.Script),
       Tty: true,
       OpenStdin: true,
     },
