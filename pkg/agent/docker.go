@@ -2,13 +2,17 @@ package agent
 
 import(
   "fmt"
+  "io"
   "bytes"
 
   "github.com/docker/docker/client"
   "github.com/docker/docker/api/types/container"
   "github.com/docker/docker/api/types/mount"
   "github.com/docker/docker/api/types"
+
   "golang.org/x/net/context"
+
+  "github.com/tj/go-spin"
 )
 
 type DockerAgent struct{
@@ -76,15 +80,35 @@ func (a *DockerAgent) InitStation(config StationInitConfig)  error {
     fmt.Printf("Found existing station and deleted image [%v]\n", idri[0].Untagged)
   }
 
-  if present, _ := a.imageExists(config.Workstation.Base); present == false{
-    fmt.Println("Try pulling image")
-    r, _ := a.client.ImagePull(
+  present, err := a.imageExists(config.Workstation.Base)
+
+  if err != nil{
+    return err
+  }
+
+  if present == false{
+
+    reader, _ := a.client.ImagePull(
       ctx,
       "docker.io/library/" + config.Workstation.Base,
       types.ImagePullOptions{},
     )
 
-    defer r.Close()
+    buf := make([]byte, 32*2048)
+    spinner := spin.New()
+    for{
+      _, er := reader.Read(buf)
+      if er != nil {
+        if er == io.EOF{
+          break
+        }
+      }
+
+      fmt.Printf("\rDownloading image %s ", spinner.Next())
+    }
+
+    fmt.Println("")
+    defer reader.Close()
   }
 
   resp, err := a.client.ContainerCreate(
