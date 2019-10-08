@@ -20,6 +20,7 @@ func run(args []string){
   if err != nil {
     panic(err)
   }
+
   err = cm.Perform(args[0])
 
   if err != nil {

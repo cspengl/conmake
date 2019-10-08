@@ -4,8 +4,22 @@ import(
   "github.com/cspengl/conmake/pkg/models"
 )
 
+type PerformConfig struct{
+  ProjectName string
+  ProjectPath string
+  StepName    string
+  Step        models.Step
+}
+
+type StationInitConfig struct {
+  ProjectName string
+  StationName string
+  Workstation models.Workstation
+}
+
 type Agent interface {
-  PerformStep(string, string, models.Step) error
-  InitStation(string, string, models.Workstation) error
+  PerformStep(PerformConfig) error
+  InitStation(StationInitConfig) error
+  StationInitialized(StationInitConfig) (bool, error)
   Info()
 }

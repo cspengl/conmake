@@ -4,10 +4,9 @@ import(
   "fmt"
   "bytes"
 
-  "github.com/cspengl/conmake/pkg/models"
-
   "github.com/docker/docker/client"
   "github.com/docker/docker/api/types/container"
+  "github.com/docker/docker/api/types/mount"
   "github.com/docker/docker/api/types"
   "golang.org/x/net/context"
 )
@@ -18,7 +17,12 @@ type DockerAgent struct{
   client      *client.Client
 }
 
-const unixSocket = "unix:///var/run/docker.sock"
+const(
+  unixSocket  = "unix:///var/run/docker.sock"
+  imagePrefix = "docker.io"
+  workspace = "/workspace/"
+)
+
 
 func NewDockerAgent(endpoint, apiversion string) (*DockerAgent, error) {
 
@@ -42,29 +46,54 @@ func (a *DockerAgent) Info() {
     fmt.Printf("Host: %v, Apiversion: %v\n", a.endpoint, a.apiversion)
 }
 
-func (a *DockerAgent) InitStation(project, stationname string, s models.Workstation)  error {
+func (a *DockerAgent) InitStation(config StationInitConfig)  error {
 
   ctx := context.Background()
-  containerName := "temp-"+stationname
-  imageName := project+"/"+stationname+":conmake"
+  containerName := "temp-"+config.StationName
+  imageName := imagePrefix+"/"+config.ProjectName+"/"+config.StationName+":conmake"
 
-  fmt.Printf("Initialize station %s as image %s from base %v\n", stationname, imageName, s.Base)
+  fmt.Printf("Initialize station %s as image %s from base %v\n", config.StationName, imageName, config.Workstation.Base)
 
-  cmd := s.Preparation
+  cmd := config.Workstation.Preparation
 
   if len(cmd) == 0{
-    cmd =  []string{"/bin/bash"}
+    cmd =  []string{"pwd"}
   }else {
-    cmd = models.ScriptToCmd(s.Preparation)
+    cmd = []string{
+      "sh",
+      "-c",
+      genScript(config.Workstation.Preparation),
+    }
+  }
+
+  idri, err := a.client.ImageRemove(
+    ctx,
+    imageName,
+    types.ImageRemoveOptions{},
+  )
+
+  if err == nil {
+    fmt.Printf("Found existing station and deleted image [%v]\n", idri[0].Untagged)
+  }
+
+  if present, _ := a.imageExists(config.Workstation.Base); present == false{
+    fmt.Println("Try pulling image")
+    r, _ := a.client.ImagePull(
+      ctx,
+      "docker.io/library/" + config.Workstation.Base,
+      types.ImagePullOptions{},
+    )
+
+    defer r.Close()
   }
 
   resp, err := a.client.ContainerCreate(
     ctx,
     &container.Config{
-      Image: s.Base,
+      Image: config.Workstation.Base,
+      User: "1000:1000",
       Cmd: cmd,
-      Tty: true,
-      OpenStdin: true},
+      Tty: true},
     nil,
     nil,
     containerName)
@@ -75,7 +104,7 @@ func (a *DockerAgent) InitStation(project, stationname string, s models.Workstat
 
   fmt.Println("Container created")
 
-   err = a.client.ContainerStart(
+  err = a.client.ContainerStart(
     ctx,
     resp.ID,
     types.ContainerStartOptions{})
@@ -86,10 +115,11 @@ func (a *DockerAgent) InitStation(project, stationname string, s models.Workstat
 
   fmt.Println("Container started")
 
-   image, err := a.client.ContainerCommit(
+  _, err = a.client.ContainerCommit(
     ctx,
     resp.ID,
     types.ContainerCommitOptions{
+      Reference: imageName,
       Pause: true,
     })
 
@@ -111,32 +141,39 @@ func (a *DockerAgent) InitStation(project, stationname string, s models.Workstat
 
   fmt.Println("Container removed")
 
-  err = a.client.ImageTag(
-    ctx,
-    image.ID,
-    "testapp",
-  )
-
-  fmt.Println("Image tagged")
-
   return err
 }
 
-func (a *DockerAgent) PerformStep(project, stepname string, s models.Step) error {
+func (a *DockerAgent) PerformStep(config PerformConfig) error {
 
   ctx := context.Background()
-  containerName := project + "-" + s.Workstation
+  containerName := config.ProjectName + "-" + config.Step.Workstation
+  imageName := imagePrefix+"/"+config.ProjectName+"/"+config.Step.Workstation+":conmake"
+
+  cmd := []string{
+    "sh",
+    "-c",
+    genScript(append([]string{"cd " + workspace}, config.Step.Script...)),
+  }
 
   resp, err := a.client.ContainerCreate(
     ctx,
     &container.Config{
-      Image: s.Workstation,
-      Cmd: models.ScriptToCmd(s.Script),
+      Image: imageName,
+      User: "1000:1000",
+      Cmd: cmd,
       Tty: true,
       OpenStdin: true,
     },
     &container.HostConfig{
       AutoRemove: true,
+      Mounts: []mount.Mount{
+        {
+          Type: mount.TypeBind,
+          Source: config.ProjectPath,
+          Target: workspace,
+        },
+      },
     },
     nil,
     containerName,
@@ -166,4 +203,46 @@ func (a *DockerAgent) PerformStep(project, stepname string, s models.Step) error
   fmt.Printf(buf.String())
 
   return err
+}
+
+func (a *DockerAgent) StationInitialized(config StationInitConfig) (bool, error) {
+
+  tag := (config.ProjectName + "/" + config.StationName + ":conmake")
+
+  return a.imageExists(tag)
+}
+
+func (a *DockerAgent) imageExists(imageTag string)(bool, error){
+
+  ctx := context.Background()
+
+  images, err := a.client.ImageList(
+    ctx,
+    types.ImageListOptions{
+      All: true,
+    },
+  )
+
+  if err != nil {
+    return false, err
+  }
+
+  for _, img := range images{
+    for _, tag := range img.RepoTags{
+      if tag == imageTag{
+        return true, err
+      }
+    }
+  }
+
+  return false, err
+}
+
+func genScript(script []string) string {
+  res := ""
+  for _, cmd := range script{
+    res = res + cmd + " && "
+  }
+
+  return res[:len(res)-4]
 }

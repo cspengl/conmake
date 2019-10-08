@@ -7,9 +7,6 @@ steps:
     workstation: building
     script:
       - gcc -o testapp testapp.c
-    artifacts:
-      - name: binary
-        path: ./testapp
 
 workstations:
   building:

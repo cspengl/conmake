@@ -65,23 +65,23 @@
   branch = "master"
   name = "golang.org/x/net"
   packages = ["context","context/ctxhttp","internal/socks","proxy"]
-  revision = "2ec189313ef0a07735684caebd1ba8b8ebca456f"
+  revision = "72f939374954d0a1b2a1e27dcda950e2724dd5c1"
 
 [[projects]]
   branch = "master"
   name = "golang.org/x/sys"
   packages = ["windows"]
-  revision = "b397fe3ad8ed895c98fa54584f61835a88e65ff5"
+  revision = "ef33b2fb2c414dca4bfcf6ca59cbd1d9ad00703d"
 
 [[projects]]
   name = "gopkg.in/yaml.v2"
   packages = ["."]
-  revision = "bb4e33bf68bf89cad44d386192cbed201f35b241"
-  version = "v2.2.3"
+  revision = "f221b8435cfb71e54062f6c6e99e9ade30b124d5"
+  version = "v2.2.4"
 
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "97f4c3c6dc3118a58ff93c656bed143ffea6b742a66f00de28b0fb761da766ee"
+  inputs-digest = "2de657c1a8172c73c8203ee9155705539b78295c2ea7da2296f11c76074879e4"
   solver-name = "gps-cdcl"
   solver-version = 1
