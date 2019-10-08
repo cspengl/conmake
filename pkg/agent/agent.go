@@ -7,6 +7,5 @@ import(
 type Agent interface {
   PerformStep(string, string, models.Step) error
   InitStation(string, string, models.Workstation) error
-  GetStations(interface{}) []interface{}
   Info()
 }

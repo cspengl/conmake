@@ -5,9 +5,9 @@ import(
 )
 
 type Step struct {
-  Workstation string    'yaml:"workstation"'
-  Script []string       'yaml:"script"'
-  Artifacts []Artifact  'yaml:"artifacts"'
+  Workstation string    `yaml:"workstation"`
+  Script []string       `yaml:"script"`
+  Artifacts []Artifact  `yaml:"artifacts"`
 }
 
 func  ScriptToCmd(script []string) []string{

@@ -39,7 +39,7 @@ func InitConmaker() (*Conmaker, error) {
 
 func (c *Conmaker) Perform(step string) error{
 
-  workstation = c.conmakefile[step].Workstation
+  //workstation := c.conmakefile.Steps[step].Workstation
 
   // err := c.agent.InitStation(
   //   c.conmakefile.Project,

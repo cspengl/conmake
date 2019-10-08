@@ -8,7 +8,6 @@ import(
 
   "github.com/docker/docker/client"
   "github.com/docker/docker/api/types/container"
-  "github.com/docker/docker/api/types/filters"
   "github.com/docker/docker/api/types"
   "golang.org/x/net/context"
 )
@@ -40,50 +39,85 @@ func NewDockerAgent(endpoint, apiversion string) (*DockerAgent, error) {
 }
 
 func (a *DockerAgent) Info() {
-    fmt.Printf("Host: %v, Apiversion: %v", a.endpoint, a.apiversion)
+    fmt.Printf("Host: %v, Apiversion: %v\n", a.endpoint, a.apiversion)
 }
 
 func (a *DockerAgent) InitStation(project, stationname string, s models.Workstation)  error {
 
   ctx := context.Background()
-  containerName := project+"-"+stationname
+  containerName := "temp-"+stationname
+  imageName := project+"/"+stationname+":conmake"
 
-  if resp, err := a.client.ContainerCreate(
+  fmt.Printf("Initialize station %s as image %s from base %v\n", stationname, imageName, s.Base)
+
+  cmd := s.Preparation
+
+  if len(cmd) == 0{
+    cmd =  []string{"/bin/bash"}
+  }else {
+    cmd = models.ScriptToCmd(s.Preparation)
+  }
+
+  resp, err := a.client.ContainerCreate(
     ctx,
     &container.Config{
       Image: s.Base,
-      Cmd: models.ScriptToCmd(s.Preparation),
+      Cmd: cmd,
       Tty: true,
-      OpenStdin: true,
-    },
+      OpenStdin: true},
     nil,
     nil,
-    containerName); err != nil {
-      return err
-    }
+    containerName)
 
-  if err := a.client.ContainerStart(
+  if err != nil {
+    return err
+  }
+
+  fmt.Println("Container created")
+
+   err = a.client.ContainerStart(
     ctx,
     resp.ID,
-    types.ContainerStartOptions{}); err != nil {
+    types.ContainerStartOptions{})
+
+  if err != nil{
     return err
   }
 
-  if _, err := a.client.ContainerCommit(
+  fmt.Println("Container started")
+
+   image, err := a.client.ContainerCommit(
     ctx,
-    containerName,
-    types.ContainerCommitOptions{}); err != nil {
+    resp.ID,
+    types.ContainerCommitOptions{
+      Pause: true,
+    })
+
+  if err != nil {
     return err
   }
 
-  if err := a.client.ContainerRemove(
+  fmt.Println("Container committed")
+
+  err = a.client.ContainerRemove(
     ctx,
     resp.ID,
     types.ContainerRemoveOptions{
-      Force: true,
-      }); err != nil {
-      return err
-    }
+      Force: true})
+
+  if err != nil {
+    return err
+  }
+
+  fmt.Println("Container removed")
+
+  err = a.client.ImageTag(
+    ctx,
+    image.ID,
+    "testapp",
+  )
+
+  fmt.Println("Image tagged")
 
   return err
 }
@@ -110,7 +144,7 @@ func (a *DockerAgent) PerformStep(project, stepname string, s models.Step) error
 
   if err := a.client.ContainerStart(
     ctx,
-    containerID,
+    resp.ID,
     types.ContainerStartOptions{}); err != nil {
     return err
   }
@@ -132,16 +166,4 @@ func (a *DockerAgent) PerformStep(project, stepname string, s models.Step) error
   fmt.Printf(buf.String())
 
   return err
-}
-
-func (a *DockerAgent) GetStations(filter filters.Args) ([]types.Container) {
-
-  ctx := context.Background()
-  return a.client.ContainerList(
-    ctx,
-    &types.ContainerListOptions{
-      Quiet: true,
-      Filters: filter,
-    },
-  )
 }

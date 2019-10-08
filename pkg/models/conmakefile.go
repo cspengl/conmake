@@ -5,10 +5,10 @@ import(
 )
 
 type Conmakefile struct {
-  Version string                        'yaml:"version"'
-  Project string                        'yaml:"project"'
-  Steps map[string]Step                 'yaml:"steps"'
-  Workstations map[string]Workstation   'yaml:"workstations"'
+  Version string                        `yaml:"version"`
+  Project string                        `yaml:"project"`
+  Steps map[string]Step                 `yaml:"steps`
+  Workstations map[string]Workstation   `yaml:"workstations`
 }
 
 func NewConmakefile(data []byte) (*Conmakefile, error) {
