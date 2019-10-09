@@ -11,7 +11,7 @@ type PerformConfig struct{
   Step        models.Step
 }
 
-type StationInitConfig struct {
+type StationConfig struct {
   ProjectName string
   StationName string
   Workstation models.Workstation
@@ -19,7 +19,6 @@ type StationInitConfig struct {
 
 type Agent interface {
   PerformStep(PerformConfig) error
-  InitStation(StationInitConfig) error
-  StationInitialized(StationInitConfig) (bool, error)
+  InitStation(*StationConfig) error
   Info()
 }

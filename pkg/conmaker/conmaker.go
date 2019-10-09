@@ -47,20 +47,10 @@ func InitConmaker() (*Conmaker, error) {
 
 func (c *Conmaker) Perform(step string) error{
 
-  stationName := c.conmakefile.Steps[step].Workstation
+  err := c.InitStation(c.conmakefile.Steps[step].Workstation)
 
-  iConfig := agent.StationInitConfig{
-    ProjectName: c.conmakefile.Project,
-    StationName: stationName,
-    Workstation: c.conmakefile.Workstations[stationName],
-  }
-
-  if present, err := c.agent.StationInitialized(iConfig); present == false{
-    err = c.agent.InitStation(iConfig)
-
-    if err != nil{
-      return err
-    }
+  if err != nil {
+    return err
   }
 
   pConfig := agent.PerformConfig{
@@ -75,11 +65,11 @@ func (c *Conmaker) Perform(step string) error{
 
 func (c *Conmaker) InitStation(station string) error{
 
-  config := agent.StationInitConfig{
+  config := agent.StationConfig{
     ProjectName: c.conmakefile.Project,
     StationName: station,
     Workstation: c.conmakefile.Workstations[station],
   }
 
-  return c.agent.InitStation(config)
+  return c.agent.InitStation(&config)
 }
