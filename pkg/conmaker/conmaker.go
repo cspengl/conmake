@@ -89,3 +89,41 @@ func (c *Conmaker) InitStation(station string) (string, error){
 
   return c.agent.InitStation(config, stationExists)
 }
+
+func (c *Conmaker) DeleteStation(station string) error {
+  config := &agent.StationConfig{
+    ProjectName: c.conmakefile.Project,
+    StationName: station,
+    Image: agent.ConstructStationImageNameFromRaw(
+      c.conmakefile.Project,
+      station,
+    ),
+    Script: c.conmakefile.Workstations[station].Script,
+    Workspace: c.projectpath,
+  }
+
+  return c.agent.DeleteStation(config)
+}
+
+func (c* Conmaker) CleanStation(station string){
+  config := &agent.StationConfig{
+    ProjectName: c.conmakefile.Project,
+    StationName: station,
+    Image: agent.ConstructStationImageNameFromRaw(
+      c.conmakefile.Project,
+      station,
+    ),
+    Script: c.conmakefile.Workstations[station].Script,
+    Workspace: c.projectpath,
+  }
+
+  err := c.agent.DeleteStation(config)
+
+  if err != nil {
+    return err
+  }
+
+  config.Image = c.conmakefile.Workstations[station].Base
+
+  return c.agent.InitStation(config)
+}
