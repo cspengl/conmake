@@ -47,29 +47,45 @@ func InitConmaker() (*Conmaker, error) {
 
 func (c *Conmaker) Perform(step string) error{
 
-  err := c.InitStation(c.conmakefile.Steps[step].Workstation)
+  imageName, err := c.InitStation(c.conmakefile.Steps[step].Workstation)
 
   if err != nil {
     return err
   }
 
-  pConfig := agent.PerformConfig{
+  config := &agent.StationConfig{
     ProjectName: c.conmakefile.Project,
-    ProjectPath: c.projectpath,
-    StepName: step,
-    Step: c.conmakefile.Steps[step],
+    StationName: step,
+    Image: imageName,
+    Script: c.conmakefile.Steps[step].Script,
+    Workspace: c.projectpath,
   }
 
-  return c.agent.PerformStep(pConfig)
+  return c.agent.PerformStep(config)
 }
 
-func (c *Conmaker) InitStation(station string) error{
+func (c *Conmaker) InitStation(station string) (string, error){
 
-  config := agent.StationConfig{
+  config := &agent.StationConfig{
     ProjectName: c.conmakefile.Project,
     StationName: station,
-    Workstation: c.conmakefile.Workstations[station],
+    Image: agent.ConstructStationImageNameFromRaw(
+      c.conmakefile.Project,
+      station,
+    ),
+    Script: c.conmakefile.Workstations[station].Script,
+    Workspace: c.projectpath,
   }
 
-  return c.agent.InitStation(&config)
+  stationExists, err := c.agent.StationExists(config)
+
+  if err != nil{
+    return "", err
+  }
+
+  if !stationExists {
+    config.Image = c.conmakefile.Workstations[station].Base
+  }
+
+  return c.agent.InitStation(config, stationExists)
 }

@@ -16,6 +16,7 @@ import(
 )
 
 type DockerAgent struct{
+  ctx         context.Context
   endpoint    string
   apiversion  string
   client      *client.Client
@@ -25,8 +26,6 @@ const(
   localEndpoint = "local"
   unixSocket    = "unix:///var/run/docker.sock"
   imagePrefix   = "docker.io"
-  conmakeTag    = "conmake"
-  workspace     = "/workspace/"
 )
 
 
@@ -42,6 +41,7 @@ func NewDockerAgent(endpoint, apiversion string) (*DockerAgent, error) {
     nil)
 
   return &DockerAgent{
+    ctx: context.Background(),
     endpoint: endpoint,
     apiversion: apiversion,
     client: cli,
@@ -52,136 +52,136 @@ func (a *DockerAgent) Info() {
     fmt.Printf("Host: %v, Apiversion: %v\n", a.endpoint, a.apiversion)
 }
 
-func (a *DockerAgent) InitStation(config *StationConfig)  error {
+func (a *DockerAgent) spinUpStation(config *StationConfig) (string, error) {
 
-  // Initialize context
-  ctx := context.Background()
-
-  // Define name of container for preparing the station
-  containerName := "temp-"+config.StationName
-
-  // Constructing image name based on project and stationname
-  imageName := constructStationName(config)
-
-  //Constructing preparation command based on config.Workstation.Preparation script
-  script := config.Workstation.Preparation
-
-  if len(cmd) == 0{
-    script =  []string{"pwd"}
-  }else {
-    script = []string{genScript(config.Workstation.Preparation)}
-  }
-
-  //Check if there already is a workstation image
-  present, err := a.imageExists(imageName)
-
-  if err != nil{
-    return err
-  }
-
-  //Found workstation -> Set config.Workstation.Base to imageName
-  if present == true{
-    fmt.Println("Found existing station")
-    config.Workstation.Base = imageName
-  }
-
-  //Starting initialization
-  fmt.Printf("Initialize station %s as image %s from base %v\n", config.StationName, imageName, config.Workstation.Base)
-
-  id, err := a.spinUpStation(config, script, containerName)
+  //Check if image exists
+  imageExists, err := a.imageExists(config.Image)
 
   if err != nil {
-    return err
+    return "", err
   }
 
-  //Remove old image
-  _, err = a.client.ImageRemove(
-    ctx,
-    imageName,
-    types.ImageRemoveOptions{},
+  //If image not present agent tries to download it
+  if !imageExists {
+    fmt.Printf("\tGiven image not found (%s)", config.Image)
+    err = a.downloadImage(config.Image)
+  }
+
+  //Command
+  cmd := []string{
+    "sh",
+    "-c",
+    genScript(config.Script),
+  }
+
+  //Creating container from image
+  resp, err := a.client.ContainerCreate(
+    a.ctx,
+    &container.Config{
+      User: "1000:1000",
+      Image: config.Image,
+      Tty: true,
+      Cmd: cmd,
+      WorkingDir: Workspace,
+    },
+    &container.HostConfig{
+      Mounts: []mount.Mount{
+        {
+          Type: mount.TypeBind,
+          Source: config.Workspace,
+          Target: workspace,
+        },
+      },
+    },
+    nil,
+    config.StationName,
   )
 
-  if err == nil{
-      fmt.Println("\tRemoved old station")
+  if err != nil {
+    return "", err
   }
 
-  //Commit new image
+  //Start created container
+   err = a.client.ContainerStart(
+    a.ctx,
+    resp.ID,
+    types.ContainerStartOptions{},
+  )
+
+  return resp.ID, err
+}
+
+func (a *DockerAgent) InitStation(config *StationConfig, existing bool) (string, error) {
+
+  //Creating image name
+  imageName := ConstructStationImageName(config)
+
+  //Spinup station
+  stationContainerID, err := a.spinUpStation(config)
+
+  if err != nil {
+    return "", err
+  }
+
+  //Delete old station
+  if existing {
+    err = a.DeleteStation(config)
+  }
+
+  if err != nil {
+    return "", err
+  }
+
+  //Committing station as new image
   _, err = a.client.ContainerCommit(
-    ctx,
-    containerName,
+    a.ctx,
+    config.StationName,
     types.ContainerCommitOptions{
       Reference: imagePrefix+"/"+imageName,
     },
   )
 
   if err != nil {
-    return err
+    return "", err
   }
 
-  fmt.Println("\tCommitted new station")
-
-  //Stop and Remove container
+  //Remove running station container
   err = a.client.ContainerRemove(
-    ctx,
-    id,
+    a.ctx,
+    stationContainerID,
     types.ContainerRemoveOptions{
-      Force: true})
+      Force: true,
+    },
+  )
+
+  return imageName, err
+}
+
+func (a *DockerAgent) DeleteStation(config *StationConfig) error {
+  _, err := a.client.ImageRemove(
+    a.ctx,
+    config.Image,
+    types.ImageRemoveOptions{
+      Force: true,
+    },
+  )
+
+  return err
+}
+
+func (a *DockerAgent) PerformStep(config *StationConfig) error {
+
+  //Spin up station
+  stationContainerID, err := a.spinUpStation(config)
 
   if err != nil {
     return err
   }
 
-  fmt.Println("\tRemoved station")
-
-  fmt.Println("Station initialized")
-
-  return err
-}
-
-func (a *DockerAgent) PerformStep(config PerformConfig) error {
-
-  ctx := context.Background()
-  containerName := config.ProjectName + "-" + config.Step.Workstation
-  imageName := imagePrefix+"/"+config.ProjectName+"/"+config.Step.Workstation+":conmake"
-
-  cmd := []string{
-    "sh",
-    "-c",
-    genScript(append([]string{"cd " + workspace}, config.Step.Script...)),
-  }
-
-  resp, err := a.client.ContainerCreate(
-    ctx,
-    &container.Config{
-      Image: imageName,
-      User: "1000:1000",
-      Cmd: cmd,
-      Tty: true,
-    },
-    &container.HostConfig{
-      AutoRemove: true,
-      Mounts: []mount.Mount{
-        {
-          Type: mount.TypeBind,
-          Source: config.ProjectPath,
-          Target: workspace,
-        },
-      },
-    },
-    nil,
-    containerName,
-  )
-
-  if err := a.client.ContainerStart(
-    ctx,
-    resp.ID,
-    types.ContainerStartOptions{}); err != nil {
-    return err
-  }
-
+  //Attaching to container logs
   out, err := a.client.ContainerLogs(
-    ctx,
-    resp.ID,
+    a.ctx,
+    stationContainerID,
     types.ContainerLogsOptions{
       ShowStderr: true,
       ShowStdout: true,
@@ -195,70 +195,27 @@ func (a *DockerAgent) PerformStep(config PerformConfig) error {
   buf.ReadFrom(out)
   fmt.Printf(buf.String())
 
+  //Remove running station container after shell script runned
+  err = a.client.ContainerRemove(
+    a.ctx,
+    stationContainerID,
+    types.ContainerRemoveOptions{
+      Force: true,
+    },
+  )
+
   return err
 }
 
-func (a *DockerAgent) StationInitialized(config StationConfig) (bool, error) {
-
-  tag := (config.ProjectName + "/" + config.StationName + ":conmake")
-
-  return a.imageExists(tag)
+func (a *DockerAgent) StationExists(config *StationConfig) (bool, error) {
+  return a.imageExists(ConstructStationImageName(config))
 }
 
-func (a *DockerAgent) spinUpStation(config *StationConfig, cmd []string, containerName string) (string, error){
-
-  ctx := context.Background()
-
-  //Check if given base image exists
-  present, err := a.imageExists(config.Workstation.Base)
-
-  if err != nil{
-    return "", err
-  }
-
-  //If base image does not exists it tries to download the base
-  if present == false{
-    a.downloadImage(config.Workstation.Base)
-  }
-
-  //Creating container
-  resp, err := a.client.ContainerCreate(
-    ctx,
-    &container.Config{
-      Image: config.Workstation.Base,
-      User: "1000:1000",
-      Shell: cmd,
-      Tty: true},
-    nil,
-    nil,
-    containerName)
-
-  if err != nil {
-    return "", err
-  }
-
-  fmt.Println("\tStation created")
-
-  err = a.client.ContainerStart(
-    ctx,
-    resp.ID,
-    types.ContainerStartOptions{})
-
-  if err != nil{
-    return "", err
-  }
-
-  fmt.Println("\tStation prepared")
-
-  return resp.ID, err
-}
 
 func (a *DockerAgent) imageExists(imageTag string)(bool, error){
 
-  ctx := context.Background()
-
   images, err := a.client.ImageList(
-    ctx,
+    a.ctx,
     types.ImageListOptions{
       All: true,
     },
@@ -275,16 +232,13 @@ func (a *DockerAgent) imageExists(imageTag string)(bool, error){
       }
     }
   }
-
   return false, err
 }
 
 func (a *DockerAgent) downloadImage(image string) error {
 
-  ctx := context.Background()
-
   reader, err := a.client.ImagePull(
-    ctx,
+    a.ctx,
     imagePrefix+"/library/" + image,
     types.ImagePullOptions{},
   )
@@ -310,13 +264,14 @@ func (a *DockerAgent) downloadImage(image string) error {
 
 func genScript(script []string) string {
   res := ""
+
+  if len(script) == 0 {
+    return ""
+  }
+
   for _, cmd := range script{
     res = res + cmd + " && "
   }
 
   return res[:len(res)-4]
-}
-
-func constructStationName(config *StationConfig) (string) {
-  return config.ProjectName+"/"+config.StationName+":"+conmakeTag
 }

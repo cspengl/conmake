@@ -1,24 +1,34 @@
 package agent
 
-import(
-  "github.com/cspengl/conmake/pkg/models"
+const(
+  ConmakeTag = "conmake"
+  Workspace = "/workspace/"
 )
-
-type PerformConfig struct{
-  ProjectName string
-  ProjectPath string
-  StepName    string
-  Step        models.Step
-}
 
 type StationConfig struct {
   ProjectName string
   StationName string
-  Workstation models.Workstation
+  Image       string
+  Script      []string
+  Workspace   string
 }
 
 type Agent interface {
-  PerformStep(PerformConfig) error
-  InitStation(*StationConfig) error
+  PerformStep(*StationConfig) error
+  InitStation(*StationConfig, bool) (string, error)
+  DeleteStation(*StationConfig) error
+  StationExists(*StationConfig) (bool, error)
   Info()
+}
+
+func ConstructStationImageName(config *StationConfig) string{
+  return ConstructStationImageNameFromRaw(config.ProjectName, config.StationName)
+}
+
+func ConstructStationImageNameFromRaw(projectname, stationname string) string {
+  return projectname+"/"+stationname+":"+ConmakeTag
+}
+
+func ConstructStationContainerName(config *StationConfig) string{
+  return config.ProjectName+"-"+config.StationName
 }

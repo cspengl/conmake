@@ -24,7 +24,7 @@ func initStation(stationName string) {
     panic(err)
   }
 
-  err = cm.InitStation(stationName)
+  _ , err = cm.InitStation(stationName)
 
   if err != nil {
     panic(err)
