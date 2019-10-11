@@ -10,7 +10,7 @@ import (
   "github.com/spf13/cobra"
 )
 
-var conmakeCmd = &cobra.Command {
+var ConmakeCmd = &cobra.Command {
   Use:    "conmake",
   Short:  "Build tool running inside docker container",
   Long:   `conmake is a command line tool similar to
@@ -21,13 +21,13 @@ var conmakeCmd = &cobra.Command {
 }
 
 func init(){
-  conmakeCmd.AddCommand(versionCmd)
-  conmakeCmd.AddCommand(station.StationCmd)
-  conmakeCmd.AddCommand(do.DoCmd)
+  ConmakeCmd.AddCommand(versionCmd)
+  ConmakeCmd.AddCommand(station.StationCmd)
+  ConmakeCmd.AddCommand(do.DoCmd)
 }
 
 func Execute() {
-  if err := conmakeCmd.Execute(); err != nil {
+  if err := ConmakeCmd.Execute(); err != nil {
     fmt.Println(err)
     os.Exit(1)
   }

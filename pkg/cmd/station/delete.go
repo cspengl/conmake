@@ -6,28 +6,25 @@ import (
   "github.com/spf13/cobra"
 )
 
-var initCmd = &cobra.Command{
-  Use:    "init <station>",
-  Short:  "Init station from Conmakefile",
+var deleteCmd = &cobra.Command{
+  Use:    "delete <station>",
+  Short:  "Deletes existing station",
   Args:   cobra.ExactArgs(1),
   Run:    func(cmd *cobra.Command, args []string){
-     initStation(args[0])
+      deleteStation(args[0])
   },
 }
 
-
-func initStation(stationName string) {
-
+func deleteStation(stationName string){
   cm, err := conmaker.InitConmaker()
 
   if err != nil {
     panic(err)
   }
 
-  _ , err = cm.InitStation(stationName)
+  err = cm.DeleteStation(stationName)
 
   if err != nil {
     panic(err)
   }
-
 }

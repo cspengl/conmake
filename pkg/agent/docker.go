@@ -89,7 +89,7 @@ func (a *DockerAgent) spinUpStation(config *StationConfig) (string, error) {
         {
           Type: mount.TypeBind,
           Source: config.Workspace,
-          Target: workspace,
+          Target: Workspace,
         },
       },
     },
@@ -163,6 +163,7 @@ func (a *DockerAgent) DeleteStation(config *StationConfig) error {
     config.Image,
     types.ImageRemoveOptions{
       Force: true,
+      PruneChildren: true,
     },
   )
 

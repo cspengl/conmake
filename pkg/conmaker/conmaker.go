@@ -105,7 +105,7 @@ func (c *Conmaker) DeleteStation(station string) error {
   return c.agent.DeleteStation(config)
 }
 
-func (c* Conmaker) CleanStation(station string){
+func (c* Conmaker) CleanStation(station string) error {
   config := &agent.StationConfig{
     ProjectName: c.conmakefile.Project,
     StationName: station,
@@ -125,5 +125,7 @@ func (c* Conmaker) CleanStation(station string){
 
   config.Image = c.conmakefile.Workstations[station].Base
 
-  return c.agent.InitStation(config)
+  _, err = c.InitStation(station)
+
+  return err
 }
