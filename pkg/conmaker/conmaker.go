@@ -1,6 +1,7 @@
 package conmaker
 
 import(
+  "log"
   "os"
   "io/ioutil"
 
@@ -22,10 +23,14 @@ func NewConmaker(a agent.Agent, c *models.Conmakefile, p string) *Conmaker {
   }
 }
 
-func InitConmaker() (*Conmaker, error) {
+func InitConmaker(projectpath, conmakefile string) (*Conmaker, error) {
 
   //Read file
-  f, err := ioutil.ReadFile("Conmakefile.yaml")
+  f, err := ioutil.ReadFile(conmakefile)
+
+  if err != nil {
+    log.Fatal("Conmakefile not found")
+  }
 
   //Parse file and construct models
   c, err := models.NewConmakefile(f)
@@ -33,14 +38,14 @@ func InitConmaker() (*Conmaker, error) {
   //Construct agent
   a, err := agent.NewDockerAgent("local", "1.40")
 
-
-  //Project path as cwd
-  p, err := os.Getwd()
+  if projectpath == "./"{
+    projectpath, err = os.Getwd()
+  }
 
   return &Conmaker{
     agent: a,
     conmakefile: c,
-    projectpath: p,
+    projectpath: projectpath,
   }, err
 }
 
@@ -84,6 +89,7 @@ func (c *Conmaker) InitStation(station string) (string, error){
   }
 
   if !stationExists {
+    log.Println("Station not found, initializing from base...")
     config.Image = c.conmakefile.Workstations[station].Base
   }
 

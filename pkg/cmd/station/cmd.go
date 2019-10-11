@@ -6,7 +6,7 @@ import(
 
 var StationCmd = &cobra.Command{
   Use:    "station",
-  Short:  "Parent command for managing stations for the given environment",
+  Short:  "Parent command for managing workstations",
 }
 
 func init(){

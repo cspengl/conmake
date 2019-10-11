@@ -2,6 +2,7 @@ package station
 
 import (
   "github.com/cspengl/conmake/pkg/conmaker"
+  "github.com/cspengl/conmake/pkg/cmd/flags"
 
   "github.com/spf13/cobra"
 )
@@ -18,7 +19,7 @@ var initCmd = &cobra.Command{
 
 func initStation(stationName string) {
 
-  cm, err := conmaker.InitConmaker()
+  cm, err := conmaker.InitConmaker(flags.ProjectPath, flags.ConmakefilePath)
 
   if err != nil {
     panic(err)

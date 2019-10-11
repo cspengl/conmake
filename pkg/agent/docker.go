@@ -63,7 +63,6 @@ func (a *DockerAgent) spinUpStation(config *StationConfig) (string, error) {
 
   //If image not present agent tries to download it
   if !imageExists {
-    fmt.Printf("\tGiven image not found (%s)", config.Image)
     err = a.downloadImage(config.Image)
   }
 

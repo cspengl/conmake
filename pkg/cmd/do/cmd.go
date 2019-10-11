@@ -2,6 +2,7 @@ package do
 
 import(
   "github.com/cspengl/conmake/pkg/conmaker"
+  "github.com/cspengl/conmake/pkg/cmd/flags"
 
   "github.com/spf13/cobra"
 )
@@ -16,7 +17,7 @@ var DoCmd = &cobra.Command{
 }
 
 func run(args []string){
-  cm, err := conmaker.InitConmaker()
+  cm, err := conmaker.InitConmaker(flags.ProjectPath, flags.ConmakefilePath)
   if err != nil {
     panic(err)
   }
