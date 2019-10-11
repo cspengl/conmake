@@ -62,13 +62,15 @@ workstations:
   | `steps` | Define build steps (see table below) |
   | `workstations` | Define workstations (see table below) |
 
-- **Steps**
+- **Steps**  
+
   | Field | Description |
   | ----------------------------------- | -------------------------------------------------------------- |
   | `workstation` | Name of the workstation should be used for this build step |
   | `script` | List of commands to execute on the workstation |
 
-- **Workstations**
+- **Workstations**  
+
   | Field | Description |
   | ----------------------------------- | -------------------------------------------------------------- |
   | `base` | Name of the base image should be used for this build step |
