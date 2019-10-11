@@ -21,6 +21,25 @@ type Agent interface {
   Info()
 }
 
+func genShellScript(script []string) string {
+  res := ""
+
+  if len(script) == 0 {
+    return ""
+  }
+
+  for _, cmd := range script{
+    res = res + cmd + " && "
+  }
+
+  return res[:len(res)-4]
+}
+
+func PerformOnHost(script []string) error {
+  //TODO: Has to be implemented
+  return nil
+}
+
 func ConstructStationImageName(config *StationConfig) string{
   return ConstructStationImageNameFromRaw(config.ProjectName, config.StationName)
 }

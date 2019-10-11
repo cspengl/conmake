@@ -70,7 +70,7 @@ func (a *DockerAgent) spinUpStation(config *StationConfig) (string, error) {
   cmd := []string{
     "sh",
     "-c",
-    genScript(config.Script),
+    genShellScript(config.Script),
   }
 
   //Creating container from image
@@ -260,18 +260,4 @@ func (a *DockerAgent) downloadImage(image string) error {
   defer reader.Close()
 
   return err
-}
-
-func genScript(script []string) string {
-  res := ""
-
-  if len(script) == 0 {
-    return ""
-  }
-
-  for _, cmd := range script{
-    res = res + cmd + " && "
-  }
-
-  return res[:len(res)-4]
 }
