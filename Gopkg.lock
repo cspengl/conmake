@@ -8,6 +8,12 @@
   version = "v0.4.14"
 
 [[projects]]
+  name = "github.com/cpuguy83/go-md2man"
+  packages = ["md2man"]
+  revision = "7762f7e404f8416dfa1d9bb6a8c192aa9acb4d19"
+  version = "v1.0.10"
+
+[[projects]]
   name = "github.com/docker/distribution"
   packages = ["digestset","reference"]
   revision = "2461543d988979529609e8cb6fca9ca190dc48da"
@@ -50,8 +56,14 @@
   version = "v0.8.1"
 
 [[projects]]
-  name = "github.com/spf13/cobra"
+  name = "github.com/russross/blackfriday"
   packages = ["."]
+  revision = "05f3235734ad95d0016f6a23902f06461fcf567a"
+  version = "v1.5.2"
+
+[[projects]]
+  name = "github.com/spf13/cobra"
+  packages = [".","doc"]
   revision = "f2b07da1e2c38d5f12845a4f607e2e1018cbb1f5"
   version = "v0.0.5"
 
@@ -88,6 +100,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "a22669d9f53d6eabab9ee83ed6f36b87267b44acc3cec4ac6e5b3670b2ca01f9"
+  inputs-digest = "2fc7fd1c5fd80f280f459485fefff6e64faf2f07a288a4e55750f7790bfecc2e"
   solver-name = "gps-cdcl"
   solver-version = 1
