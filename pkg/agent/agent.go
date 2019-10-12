@@ -14,21 +14,33 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
+//Agent package containing the generic agent definition
 package agent
 
 const(
+  //Tag for tagging conmake images
   ConmakeTag = "conmake"
+
+  //Mounting target for the projectpath inside the workstation container
   Workspace = "/workspace/"
 )
 
+//Config for modeling a workstation
 type StationConfig struct {
+  //Name of the project
   ProjectName string
+  //Name of the station
   StationName string
+  //Used image
   Image       string
+  //Script to be executed on the station
   Script      []string
+  //Mounting source
   Workspace   string
 }
 
+//Interface modeling a generic agent performing steps based on
+//a given StationConfig
 type Agent interface {
   PerformStep(*StationConfig) error
   InitStation(*StationConfig, bool) (string, error)
@@ -37,7 +49,8 @@ type Agent interface {
   Info()
 }
 
-func genShellScript(script []string) string {
+//Generates a shell script from a list of commands
+func GenShellScript(script []string) string {
   res := ""
 
   if len(script) == 0 {
@@ -56,14 +69,17 @@ func PerformOnHost(script []string) error {
   return nil
 }
 
+//Constructs the name of an image based on a given station configuration
 func ConstructStationImageName(config *StationConfig) string{
   return ConstructStationImageNameFromRaw(config.ProjectName, config.StationName)
 }
 
+//Constructs the image name based on the project name and the stationname
 func ConstructStationImageNameFromRaw(projectname, stationname string) string {
   return projectname+"/"+stationname+":"+ConmakeTag
 }
 
+//Constructs the name of a container based on a given station config.
 func ConstructStationContainerName(config *StationConfig) string{
   return config.ProjectName+"-"+config.StationName
 }

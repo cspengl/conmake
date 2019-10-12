@@ -14,6 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
+//Containing all commands under the sub command 'do'
 package do
 
 import(
@@ -23,6 +24,7 @@ import(
   "github.com/spf13/cobra"
 )
 
+//Command performing a step from a Conmakfile
 var DoCmd = &cobra.Command{
   Use:    "do stepname",
   Short:  "Performs stepname from Conmakefile",

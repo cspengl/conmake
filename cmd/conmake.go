@@ -14,12 +14,14 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
+//Contains the main function which executes the main root command
 package main
 
 import (
   "github.com/cspengl/conmake/pkg/cmd"
 )
 
+//Main function executing the main command
 func main() {
   cmd.Execute()
 }

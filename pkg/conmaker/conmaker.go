@@ -14,6 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
+//Core package of conmake implementing the functions called by the commands.
 package conmaker
 
 import(
@@ -22,15 +23,19 @@ import(
   "io/ioutil"
 
   "github.com/cspengl/conmake/pkg/agent"
+  "github.com/cspengl/conmake/pkg/agent/docker"
   "github.com/cspengl/conmake/pkg/models"
 )
 
+//Constructs the conmaker based on an agent to use, a conmakefile and
+//the project path.
 type Conmaker struct{
     agent agent.Agent
     conmakefile *models.Conmakefile
     projectpath string
 }
 
+//Returns a instance of Conmaker based on existing agent and conmakefile
 func NewConmaker(a agent.Agent, c *models.Conmakefile, p string) *Conmaker {
   return &Conmaker{
     agent: a,
@@ -39,6 +44,9 @@ func NewConmaker(a agent.Agent, c *models.Conmakefile, p string) *Conmaker {
   }
 }
 
+//Initializes Conmaker based on a projectpath and a path to a Conmakefile
+//Currently using the local docker daemon as agent per default
+//since its the only supported
 func InitConmaker(projectpath, conmakefile string) (*Conmaker, error) {
 
   //Read file
@@ -52,7 +60,7 @@ func InitConmaker(projectpath, conmakefile string) (*Conmaker, error) {
   c, err := models.NewConmakefile(f)
 
   //Construct agent
-  a, err := agent.NewDockerAgent("local", "1.40")
+  a, err := docker.NewDockerAgent("local", "1.40")
 
   if projectpath == "./"{
     projectpath, err = os.Getwd()
@@ -65,7 +73,8 @@ func InitConmaker(projectpath, conmakefile string) (*Conmaker, error) {
   }, err
 }
 
-
+//Performs a step of the Conmakefile associated to the Conmaker with the
+//associated agent.
 func (c *Conmaker) Perform(step string) error{
 
   imageName, err := c.InitStation(c.conmakefile.Steps[step].Workstation)
@@ -85,6 +94,8 @@ func (c *Conmaker) Perform(step string) error{
   return c.agent.PerformStep(config)
 }
 
+//Initializes a workstation of the Conmakefile associated to the Conmaker
+//with the associated agent.
 func (c *Conmaker) InitStation(station string) (string, error){
 
   config := &agent.StationConfig{
@@ -112,6 +123,8 @@ func (c *Conmaker) InitStation(station string) (string, error){
   return c.agent.InitStation(config, stationExists)
 }
 
+//Deletes a workstation of the Conmakefile associated to the Conmaker
+//with the associated agent.
 func (c *Conmaker) DeleteStation(station string) error {
   config := &agent.StationConfig{
     ProjectName: c.conmakefile.Project,
@@ -127,6 +140,9 @@ func (c *Conmaker) DeleteStation(station string) error {
   return c.agent.DeleteStation(config)
 }
 
+//Cleans a workstation of the Conmakefile associated to the Conmaker
+//with the associated agent. This basically deletes the existing one and
+//initializes a new one from the given base image.
 func (c* Conmaker) CleanStation(station string) error {
   config := &agent.StationConfig{
     ProjectName: c.conmakefile.Project,

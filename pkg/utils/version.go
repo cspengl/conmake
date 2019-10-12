@@ -16,5 +16,6 @@ limitations under the License.
 
 package utils
 
+//Variable storing the semantic version number of conmake.
 var Version string //will be set by -ldflags
 /*go build|run|install [...] -ldflags "-X github.com/cspengl/conmake/pkg/utils.Version=<version>" [...]*/

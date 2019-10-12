@@ -20,6 +20,7 @@ import(
   "gopkg.in/yaml.v2"
 )
 
+//Struct modeling the YAML Object of a Conmakefile
 type Conmakefile struct {
   Version string                        `yaml:"version"`
   Project string                        `yaml:"project"`
@@ -27,17 +28,20 @@ type Conmakefile struct {
   Workstations map[string]Workstation   `yaml:"workstations`
 }
 
+//Struct modeling the YAML Object of a step inside a Conmakefile
 type Step struct {
   Workstation string    `yaml:"workstation"`
   Script []string       `yaml:"script"`
 }
 
+//Struct modeling the YAML Object of a workstation inside a Conmakefile
 type Workstation struct {
   Base string           `yaml:"base"`
   Autoinit bool         `yaml:"autoinit"`
   Script []string       `yaml:"preparation"`
 }
 
+//Parses a Conmakfile from bytes into a Conmakefile struct
 func NewConmakefile(data []byte) (*Conmakefile, error) {
   c := Conmakefile{}
   err := yaml.Unmarshal(data, &c)

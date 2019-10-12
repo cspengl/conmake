@@ -14,6 +14,8 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
+//Parent package for all commands
+//Contains the root command and the version command
 package cmd
 
 import (
@@ -27,7 +29,7 @@ import (
   "github.com/spf13/cobra"
 )
 
-var ConmakeCmd = &cobra.Command {
+var conmakeCmd = &cobra.Command {
   Use:    "conmake",
   Short:  "Build tool running steps in containers",
   Long:   `
@@ -40,17 +42,19 @@ make running the steps inside a container`,
 
 func init(){
   //Adding commands
-  ConmakeCmd.AddCommand(versionCmd)
-  ConmakeCmd.AddCommand(station.StationCmd)
-  ConmakeCmd.AddCommand(do.DoCmd)
+  conmakeCmd.AddCommand(versionCmd)
+  conmakeCmd.AddCommand(station.StationCmd)
+  conmakeCmd.AddCommand(do.DoCmd)
 
   //Adding flags
-  ConmakeCmd.PersistentFlags().StringVarP(&flags.ProjectPath, "path", "p", "./", "Absolute path to the project")
-  ConmakeCmd.PersistentFlags().StringVarP(&flags.ConmakefilePath, "conmakefile", "f", "./Conmakefile.yaml", "Path to the Conmakefile to use")
+  conmakeCmd.PersistentFlags().StringVarP(&flags.ProjectPath, "path", "p", "./", "Absolute path to the project")
+  conmakeCmd.PersistentFlags().StringVarP(&flags.ConmakefilePath, "conmakefile", "f", "./Conmakefile.yaml", "Path to the Conmakefile to use")
 }
 
+//Executes root command.
+//Catches potential errors and exits with code 1 on error.
 func Execute() {
-  if err := ConmakeCmd.Execute(); err != nil {
+  if err := conmakeCmd.Execute(); err != nil {
     fmt.Println(err)
     os.Exit(1)
   }
