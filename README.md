@@ -87,3 +87,7 @@ I am happy about any kind of feedback, feature or improvement ideas you have. If
     ```
  - **Dependency management**  
     For dependency management [godep](https://godoc.org/github.com/tools/godep) is used.
+
+## Licensing
+
+**conmake** is licensed under the Apache 2.0 License. Check [LICENSE](LICENSE.md) for the full license text. Used modules may be licensed under a different license model.
