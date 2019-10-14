@@ -47,6 +47,7 @@ type Agent interface {
 	InitStation(*StationConfig, bool) (string, error)
 	DeleteStation(*StationConfig) error
 	StationExists(*StationConfig) (bool, error)
+	StationList(string) (error)
 	Info()
 }
 
