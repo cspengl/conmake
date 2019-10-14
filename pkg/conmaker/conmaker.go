@@ -60,6 +60,10 @@ func InitConmaker(projectpath, conmakefile string) (*Conmaker, error) {
 	//Parse file and construct models
 	c, err := models.NewConmakefile(f)
 
+	if err != nil {
+		log.Fatal("Could not parse Conmakefile")
+	}
+
 	//Construct agent
 	a, err := docker.NewDockerAgent("local", "1.40")
 

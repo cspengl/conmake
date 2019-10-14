@@ -18,10 +18,10 @@ limitations under the License.
 package main
 
 import (
-  "github.com/cspengl/conmake/pkg/cmd"
+	"github.com/cspengl/conmake/pkg/cmd"
 )
 
 //Main function executing the main command
 func main() {
-  cmd.Execute()
+	cmd.Execute()
 }

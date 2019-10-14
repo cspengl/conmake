@@ -88,6 +88,10 @@ func (a *DockerAgent) spinUpStation(config *agent.StationConfig) (string, error)
 		err = a.downloadImage(config.Image)
 	}
 
+	if err != nil {
+		return "", err
+	}
+
 	//Command
 	cmd := []string{
 		"sh",
@@ -220,6 +224,10 @@ func (a *DockerAgent) PerformStep(config *agent.StationConfig) error {
 	buf := new(bytes.Buffer)
 	buf.ReadFrom(out)
 	fmt.Printf(buf.String())
+
+	if err != nil {
+		return err
+	}
 
 	//Remove running station container after shell script runned
 	err = a.client.ContainerRemove(
