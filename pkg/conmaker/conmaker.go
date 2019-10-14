@@ -22,6 +22,7 @@ import (
 	"io/ioutil"
 	"log"
 	"os"
+	"errors"
 
 	"github.com/cspengl/conmake/pkg/agent"
 	"github.com/cspengl/conmake/pkg/agent/docker"
@@ -55,6 +56,7 @@ func InitConmaker(projectpath, conmakefile string) (*Conmaker, error) {
 
 	if err != nil {
 		log.Fatal("Conmakefile not found")
+		return nil, err
 	}
 
 	//Parse file and construct models
@@ -62,6 +64,7 @@ func InitConmaker(projectpath, conmakefile string) (*Conmaker, error) {
 
 	if err != nil {
 		log.Fatal("Could not parse Conmakefile")
+		return nil, err
 	}
 
 	//Construct agent
@@ -81,6 +84,12 @@ func InitConmaker(projectpath, conmakefile string) (*Conmaker, error) {
 //Perform performs a step of the Conmakefile associated to the Conmaker with the
 //associated agent.
 func (c *Conmaker) Perform(step string) error {
+
+	//Check if used step is in conmakefile
+	if _, ok := c.conmakefile.Steps[step]; !ok {
+		log.Fatalf("Step %s not found in conmakefile", step)
+		return errors.New("Step not found!")
+	}
 
 	imageName, err := c.InitStation(c.conmakefile.Steps[step].Workstation)
 
@@ -102,6 +111,12 @@ func (c *Conmaker) Perform(step string) error {
 //InitStation initializes a workstation of the Conmakefile associated
 //to the Conmaker with the associated agent.
 func (c *Conmaker) InitStation(station string) (string, error) {
+
+	err := c.validateStation(station)
+
+	if err != nil {
+		return "", err
+	}
 
 	config := &agent.StationConfig{
 		ProjectName: c.conmakefile.Project,
@@ -131,6 +146,13 @@ func (c *Conmaker) InitStation(station string) (string, error) {
 //DeleteStation deletes a workstation of the Conmakefile associated to the Conmaker
 //with the associated agent.
 func (c *Conmaker) DeleteStation(station string) error {
+
+	err := c.validateStation(station)
+
+	if err != nil {
+		return err
+	}
+
 	config := &agent.StationConfig{
 		ProjectName: c.conmakefile.Project,
 		StationName: station,
@@ -149,6 +171,13 @@ func (c *Conmaker) DeleteStation(station string) error {
 //with the associated agent. This basically deletes the existing one and
 //initializes a new one from the given base image.
 func (c *Conmaker) CleanStation(station string) error {
+
+	err :=  c.validateStation(station)
+
+	if err != nil {
+		return err
+	}
+
 	config := &agent.StationConfig{
 		ProjectName: c.conmakefile.Project,
 		StationName: station,
@@ -160,7 +189,7 @@ func (c *Conmaker) CleanStation(station string) error {
 		Workspace: c.projectpath,
 	}
 
-	err := c.agent.DeleteStation(config)
+	err = c.agent.DeleteStation(config)
 
 	if err != nil {
 		return err
@@ -171,4 +200,12 @@ func (c *Conmaker) CleanStation(station string) error {
 	_, err = c.InitStation(station)
 
 	return err
+}
+
+func (c *Conmaker) validateStation(station string) error {
+	if _, ok := c.conmakefile.Workstations[station]; !ok {
+		log.Fatalf("Station %s not found in conmakefile", station)
+		return errors.New("Station not found!")
+	}
+	return nil
 }
