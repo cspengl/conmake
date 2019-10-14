@@ -45,14 +45,18 @@ Get more information about supported agents and how to configure them [here](doc
 
 Since there is actually no release of conmake you have to compile it from source. Required for this is a working go environment and [godep](https://godoc.org/github.com/tools/godep).
 
-  1. Clone or download the repository
-  2. Install dependencies with:  
+  1. Get the repository with:
+      ```bash
+      $ go get github.com/cspengl/conmake
+      ```
+  2. Go to `$GOPATH/src/github.com/cspengl/conmake`
+  3. Install dependencies with:  
       ```bash
       $ dep ensure
       ```
-  3. Build it with:
+  4. Install it with:
       ```bash
-      $ go build cmd/conmake.go
+      $ go install cmd/conmake.go
       ```
 
 ## Getting started
