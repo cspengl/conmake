@@ -25,7 +25,8 @@ import (
 	"os"
 
 	"github.com/cspengl/conmake/pkg/agent"
-	"github.com/cspengl/conmake/pkg/agent/docker"
+	//"github.com/cspengl/conmake/pkg/agent/docker"
+	"github.com/cspengl/conmake/pkg/agent/containerd"
 	"github.com/cspengl/conmake/pkg/models"
 )
 
@@ -68,7 +69,8 @@ func InitConmaker(projectpath, conmakefile string) (*Conmaker, error) {
 	}
 
 	//Construct agent
-	a, err := docker.NewDockerAgentFromEnv()
+	//a, err := docker.NewDockerAgentFromEnv()
+	a, err := containerd.NewContainerdAgent()
 
 	if projectpath == "./" {
 		projectpath, err = os.Getwd()
