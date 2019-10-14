@@ -204,6 +204,10 @@ func (c *Conmaker) CleanStation(station string) error {
 	return err
 }
 
+func (c *Conmaker) StationList() error {
+	return c.agent.StationList(c.conmakefile.Project)
+}
+
 func (c *Conmaker) validateStation(station string) error {
 	if _, ok := c.conmakefile.Workstations[station]; !ok {
 		log.Fatalf("Station %s not found in conmakefile", station)

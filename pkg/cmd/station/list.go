@@ -17,7 +17,8 @@ limitations under the License.
 package station
 
 import (
-	"fmt"
+	"github.com/cspengl/conmake/pkg/cmd/flags"
+	"github.com/cspengl/conmake/pkg/conmaker"
 
 	"github.com/spf13/cobra"
 )
@@ -31,5 +32,15 @@ var listCmd = &cobra.Command{
 }
 
 func list() {
-	fmt.Println("Has to be implemented")
+	cm, err := conmaker.InitConmaker(flags.ProjectPath, flags.ConmakefilePath)
+
+	if err != nil {
+		panic(err)
+	}
+
+	err = cm.StationList()
+
+	if err != nil {
+		panic(err)
+	}
 }

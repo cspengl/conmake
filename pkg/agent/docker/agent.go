@@ -20,6 +20,7 @@ import (
 	"bytes"
 	"fmt"
 	"io"
+	"strings"
 
 	"github.com/cspengl/conmake/pkg/agent"
 
@@ -263,6 +264,30 @@ func (a *DockerAgent) PerformStep(config *agent.StationConfig) error {
 //StationExists check if a given station has been initialized once.
 func (a *DockerAgent) StationExists(config *agent.StationConfig) (bool, error) {
 	return a.imageExists(agent.ConstructStationImageName(config))
+}
+
+//StationList prints a list of stations
+func (a *DockerAgent) StationList(projectname string) (error) {
+	images, err := a.client.ImageList(
+		a.ctx,
+		types.ImageListOptions{
+			All: true,
+		},
+	)
+
+	if err != nil {
+		return err
+	}
+
+	for _, img := range images{
+		for _, tag := range img.RepoTags {
+			if strings.Contains(tag, projectname){
+						fmt.Printf("%v\n", img.RepoTags)
+			}
+		}
+	}
+
+	return err
 }
 
 func (a *DockerAgent) imageExists(imageTag string) (bool, error) {
