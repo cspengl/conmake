@@ -1,4 +1,4 @@
-![goreportcard badge](https://goreportcard.com/badge/github.com/cspengl/conmake)
+[![Go Report Card](https://goreportcard.com/badge/github.com/cspengl/conmake)](https://goreportcard.com/report/github.com/cspengl/conmake)
 [![GoDoc](https://godoc.org/github.com/cspengl/conmake?status.svg)](https://godoc.org/github.com/cspengl/conmake)
 [![license badge](https://img.shields.io/badge/License-Apache_2.0-blue?logo=apache)](https://www.apache.org/licenses/LICENSE-2.0)
 
