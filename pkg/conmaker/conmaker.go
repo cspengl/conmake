@@ -19,10 +19,10 @@ limitations under the License.
 package conmaker
 
 import (
+	"errors"
 	"io/ioutil"
 	"log"
 	"os"
-	"errors"
 
 	"github.com/cspengl/conmake/pkg/agent"
 	"github.com/cspengl/conmake/pkg/agent/docker"
@@ -172,7 +172,7 @@ func (c *Conmaker) DeleteStation(station string) error {
 //initializes a new one from the given base image.
 func (c *Conmaker) CleanStation(station string) error {
 
-	err :=  c.validateStation(station)
+	err := c.validateStation(station)
 
 	if err != nil {
 		return err

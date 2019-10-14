@@ -80,10 +80,10 @@ func NewDockerAgentFromEnv() (*DockerAgent, error) {
 	ctx := context.Background()
 
 	return &DockerAgent{
-		ctx:				ctx,
-		endpoint:		unixSocket,
+		ctx:        ctx,
+		endpoint:   unixSocket,
 		apiversion: "",
-		client: 		cli,
+		client:     cli,
 	}, err
 }
 
