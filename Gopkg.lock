@@ -83,13 +83,13 @@
   branch = "master"
   name = "golang.org/x/net"
   packages = ["context","context/ctxhttp","internal/socks","proxy"]
-  revision = "72f939374954d0a1b2a1e27dcda950e2724dd5c1"
+  revision = "491137f692577e390404f177a0515c9f86f79754"
 
 [[projects]]
   branch = "master"
   name = "golang.org/x/sys"
   packages = ["windows"]
-  revision = "ef33b2fb2c414dca4bfcf6ca59cbd1d9ad00703d"
+  revision = "b09406accb4736d857a32bf9444cd7edae2ffa79"
 
 [[projects]]
   name = "gopkg.in/yaml.v2"

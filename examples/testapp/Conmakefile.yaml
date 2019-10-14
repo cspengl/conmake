@@ -13,4 +13,6 @@ workstations:
     base: gcc:latest
     autoinit: true
     preparation:
+  test:
+    base: alpine:latest
 ...
