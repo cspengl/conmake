@@ -1,9 +1,11 @@
-[![licence badge](https://img.shields.io/badge/License-Apache_2.0-blue?logo=apache)](https://www.apache.org/licenses/LICENSE-2.0)
+![goreportcard badge](https://goreportcard.com/badge/github.com/cspengl/conmake)
+[![GoDoc](https://godoc.org/github.com/cspengl/conmake?status.svg)](https://godoc.org/github.com/cspengl/conmake)
+[![license badge](https://img.shields.io/badge/License-Apache_2.0-blue?logo=apache)](https://www.apache.org/licenses/LICENSE-2.0)
 
 
 # conmake
 
-Hey!Thank you for visiting the repository of **conmake**! conmake is a command line build tool similar to the very famous [GNU Make](https://www.gnu.org/software/make/). But instead of running the commands of a 'target' directly on the machine the commands are executed inside a container. Therefore the tool is named **'conmake'** as a combination of **'container'** and **'make'**. To define the build steps **conmake** uses a kind of Makefile called 'Conmakefile' in a YAML format. Beside the build steps you can define so called workstations which define basically the build environment. A good analogy for these workstations are different tools like a circular saw or a vise on a working bench.
+Hey!Thank you for visiting the repository of **conmake**! conmake is a kind of build tool similar to the well known [GNU Make](https://www.gnu.org/software/make/). But instead of running the commands of a 'target' directly on the host machine the commands defined by a *step* are executed inside a container. Therefore the tool is named **'conmake'** as a combination of **'container'** and **'make'**. To define the build steps **conmake** uses a kind of Makefile called 'Conmakefile' in a YAML format. Beside the build steps you can define so called workstations which define basically the build environment. A good analogy for these workstations are different tools like a circular saw or a vise on a working bench.
 
 ... Ok, but why?
 
@@ -16,9 +18,28 @@ What **conmake** basically does is to spin up a workstation in form of a contain
   - a base image
   - a preparation script for initializing the station
 
-After a build step is triggered conmake looks for an existing workstation image and then runs the initialization script against this. Otherwise it spins up a new workstation from the given base image and runs the preparation script. After that the workstation gets saved to be reused the next time the build step is triggered. This saves a lot of time especially when you have many dependencies which have to be installed. If the station is reused they are all already installed.
+After a build step is triggered conmake looks for an existing workstation image and then runs the initialization script against this. Otherwise it spins up a new workstation from the given base image and runs the preparation script. After that the workstation gets saved to be reused the next time it is used. This saves a lot of time especially when you have many dependencies which have to be installed. If the station is reused they are installed already.
 
 An example project can be found inside the be found in the [example directory](examples/testapp).
+
+#### Terms
+
+- **Conmakefile**  
+  A **Conmakefile** defines **Steps** as targets to be executed and **Workstations** to be used by steps when they are triggered.
+
+- **Workstation**  
+  A **Workstation** defines an environment for a **Step**. It is basically constructed by a base image and a initialization script. To prepare a station to be used by a **Step** it has to be initialized. To initialize a station the base image is taken and a container gets created from this image. Then the script gets executed on this temporary container. After that this container gets committed as a new image. This image can then be used by a **Step**.
+
+- **Step**  
+  A **Step** describes the things you want to do with your source code. Therefore a **Step** is constructed by a workstation to be used and a script to be runned on that workstation.
+
+#### Agents
+
+Conmake is designed to work with different '**Agents**'. A agent offers the basic functions to operate with stations (Initialize, Delete, etc.) and to perform steps on these stations.
+
+> Currently there is just the 'docker agent' implemented which talks to the docker daemon to provision the stations as docker images. This gives you additionally the possibility to work with the stations via the docker-cli.
+
+Get more information about supported agents and how to configure them [here](docs/agents)
 
 ## Installation
 
@@ -58,7 +79,7 @@ workstations:
 ```
 > INFO: Get full example [here](examples/testapp)
 
-After that you can trigger on of the build steps with:
+After that you can trigger one of the build steps with:
 ```bash
 $ conmake do <buildstep>
 ```

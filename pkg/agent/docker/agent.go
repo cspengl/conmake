@@ -48,7 +48,7 @@ const (
 	imagePrefix   = "docker.io"
 )
 
-//NewDockerAgent creats new docker agent based on an endpoint and a API version
+//NewDockerAgent creates new docker agent based on an endpoint and a API version
 func NewDockerAgent(endpoint, apiversion string) (*DockerAgent, error) {
 
 	if endpoint == "local" {
@@ -65,6 +65,25 @@ func NewDockerAgent(endpoint, apiversion string) (*DockerAgent, error) {
 		endpoint:   endpoint,
 		apiversion: apiversion,
 		client:     cli,
+	}, err
+}
+
+//NewDockerAgentFromEnv returns a new docker agent based on the detected docker
+//engine on the system
+func NewDockerAgentFromEnv() (*DockerAgent, error) {
+	cli, err := client.NewEnvClient()
+
+	if err != nil {
+		return nil, err
+	}
+
+	ctx := context.Background()
+
+	return &DockerAgent{
+		ctx:				ctx,
+		endpoint:		unixSocket,
+		apiversion: "",
+		client: 		cli,
 	}, err
 }
 

@@ -68,7 +68,7 @@ func InitConmaker(projectpath, conmakefile string) (*Conmaker, error) {
 	}
 
 	//Construct agent
-	a, err := docker.NewDockerAgent("local", "1.40")
+	a, err := docker.NewDockerAgentFromEnv()
 
 	if projectpath == "./" {
 		projectpath, err = os.Getwd()
