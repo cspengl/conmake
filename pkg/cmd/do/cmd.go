@@ -14,35 +14,35 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-//Containing all commands under the sub command 'do'
+//Package do contains all commands under the sub command 'do'
 package do
 
-import(
-  "github.com/cspengl/conmake/pkg/conmaker"
-  "github.com/cspengl/conmake/pkg/cmd/flags"
+import (
+	"github.com/cspengl/conmake/pkg/cmd/flags"
+	"github.com/cspengl/conmake/pkg/conmaker"
 
-  "github.com/spf13/cobra"
+	"github.com/spf13/cobra"
 )
 
-//Command performing a step from a Conmakfile
+//DoCmd represents the command performing a step from a Conmakfile
 var DoCmd = &cobra.Command{
-  Use:    "do stepname",
-  Short:  "Performs stepname from Conmakefile",
-  Args:   cobra.ExactArgs(1),
-  Run:    func(cmd *cobra.Command, args []string){
-      run(args)
-  },
+	Use:   "do stepname",
+	Short: "Performs stepname from Conmakefile",
+	Args:  cobra.ExactArgs(1),
+	Run: func(cmd *cobra.Command, args []string) {
+		run(args)
+	},
 }
 
-func run(args []string){
-  cm, err := conmaker.InitConmaker(flags.ProjectPath, flags.ConmakefilePath)
-  if err != nil {
-    panic(err)
-  }
+func run(args []string) {
+	cm, err := conmaker.InitConmaker(flags.ProjectPath, flags.ConmakefilePath)
+	if err != nil {
+		panic(err)
+	}
 
-  err = cm.Perform(args[0])
+	err = cm.Perform(args[0])
 
-  if err != nil {
-    panic(err)
-  }
+	if err != nil {
+		panic(err)
+	}
 }

@@ -14,48 +14,49 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-//Parent package for all commands
+//Package cmd is the parent package for all commands
 //Contains the root command and the version command
 package cmd
 
 import (
-  "fmt"
-  "os"
+	"fmt"
+	"os"
 
-  "github.com/cspengl/conmake/pkg/cmd/flags"
-  "github.com/cspengl/conmake/pkg/cmd/station"
-  "github.com/cspengl/conmake/pkg/cmd/do"
+	"github.com/cspengl/conmake/pkg/cmd/do"
+	"github.com/cspengl/conmake/pkg/cmd/flags"
+	"github.com/cspengl/conmake/pkg/cmd/station"
 
-  "github.com/spf13/cobra"
+	"github.com/spf13/cobra"
 )
 
-var conmakeCmd = &cobra.Command {
-  Use:    "conmake",
-  Short:  "Build tool running steps in containers",
-  Long:   `
+//ConmakeCmd represents the root command of Conmake
+var ConmakeCmd = &cobra.Command{
+	Use:   "conmake",
+	Short: "Build tool running steps in containers",
+	Long: `
 conmake is a command line tool similar to
 make running the steps inside a container`,
-  Run: func(cmd *cobra.Command, args []string){
-    cmd.Help()
-  },
+	Run: func(cmd *cobra.Command, args []string) {
+		cmd.Help()
+	},
 }
 
-func init(){
-  //Adding commands
-  conmakeCmd.AddCommand(versionCmd)
-  conmakeCmd.AddCommand(station.StationCmd)
-  conmakeCmd.AddCommand(do.DoCmd)
+func init() {
+	//Adding commands
+	ConmakeCmd.AddCommand(versionCmd)
+	ConmakeCmd.AddCommand(station.StationCmd)
+	ConmakeCmd.AddCommand(do.DoCmd)
 
-  //Adding flags
-  conmakeCmd.PersistentFlags().StringVarP(&flags.ProjectPath, "path", "p", "./", "Absolute path to the project")
-  conmakeCmd.PersistentFlags().StringVarP(&flags.ConmakefilePath, "conmakefile", "f", "./Conmakefile.yaml", "Path to the Conmakefile to use")
+	//Adding flags
+	ConmakeCmd.PersistentFlags().StringVarP(&flags.ProjectPath, "path", "p", "./", "Absolute path to the project")
+	ConmakeCmd.PersistentFlags().StringVarP(&flags.ConmakefilePath, "conmakefile", "f", "./Conmakefile.yaml", "Path to the Conmakefile to use")
 }
 
-//Executes root command.
+//Execute executes the root command.
 //Catches potential errors and exits with code 1 on error.
 func Execute() {
-  if err := conmakeCmd.Execute(); err != nil {
-    fmt.Println(err)
-    os.Exit(1)
-  }
+	if err := ConmakeCmd.Execute(); err != nil {
+		fmt.Println(err)
+		os.Exit(1)
+	}
 }

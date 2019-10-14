@@ -14,21 +14,22 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-//Contains all commands under the subcommand 'station'
+//Package station contains all commands under the subcommand 'station'
 package station
 
-import(
-  "github.com/spf13/cobra"
+import (
+	"github.com/spf13/cobra"
 )
 
+//StationCmd represents parent command for all sub commands of station
 var StationCmd = &cobra.Command{
-  Use:    "station",
-  Short:  "Parent command for managing workstations",
+	Use:   "station",
+	Short: "Parent command for managing workstations",
 }
 
-func init(){
-  StationCmd.AddCommand(listCmd)
-  StationCmd.AddCommand(initCmd)
-  StationCmd.AddCommand(deleteCmd)
-  StationCmd.AddCommand(cleanCmd)
+func init() {
+	StationCmd.AddCommand(listCmd)
+	StationCmd.AddCommand(initCmd)
+	StationCmd.AddCommand(deleteCmd)
+	StationCmd.AddCommand(cleanCmd)
 }

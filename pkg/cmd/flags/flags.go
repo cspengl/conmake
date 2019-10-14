@@ -14,11 +14,11 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-//Stores all global flags in variables
+//Package flags stores all global flags in variables
 package flags
 
-//Projectpath set by the -p or --path flag
+//ProjectPath set by the -p or --path flag
 var ProjectPath string
 
-//Path to Conmakefile set by the -f or --conmakefile flag
+//ConmakefilePath set by the -f or --conmakefile flag
 var ConmakefilePath string

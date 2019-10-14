@@ -16,16 +16,16 @@ limitations under the License.
 
 package main
 
-import(
-  "log"
-  "github.com/cspengl/conmake/pkg/cmd"
+import (
+	"github.com/cspengl/conmake/pkg/cmd"
+	"log"
 
-  "github.com/spf13/cobra/doc"
+	"github.com/spf13/cobra/doc"
 )
 
-func main(){
-  err := doc.GenMarkdownTree(cmd.ConmakeCmd, "docs/reference/cli/")
-  if err != nil {
-    log.Fatal(err)
-  }
+func main() {
+	err := doc.GenMarkdownTree(cmd.ConmakeCmd, "docs/reference/cli/")
+	if err != nil {
+		log.Fatal(err)
+	}
 }

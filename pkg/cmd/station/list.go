@@ -17,19 +17,19 @@ limitations under the License.
 package station
 
 import (
-  "fmt"
+	"fmt"
 
-  "github.com/spf13/cobra"
+	"github.com/spf13/cobra"
 )
 
 var listCmd = &cobra.Command{
-  Use:    "list",
-  Short:  "Lists existing stations",
-  Run:    func(cmd *cobra.Command, args []string){
-      list()
-  },
+	Use:   "list",
+	Short: "Lists existing stations",
+	Run: func(cmd *cobra.Command, args []string) {
+		list()
+	},
 }
 
-func list(){
-  fmt.Println("Has to be implemented")
+func list() {
+	fmt.Println("Has to be implemented")
 }

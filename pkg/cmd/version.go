@@ -16,19 +16,20 @@ limitations under the License.
 
 package cmd
 
-import(
-  "fmt"
+import (
+	"fmt"
 
-  "github.com/cspengl/conmake/pkg/utils"
+	"github.com/cspengl/conmake/pkg/utils"
 
-  "github.com/spf13/cobra"
+	"github.com/spf13/cobra"
 )
 
+const versionTpl = "conmake [version: %v]\n"
 
 var versionCmd = &cobra.Command{
-  Use:    "version",
-  Short:  "Print the version number",
-  Run:    func(cmd *cobra.Command, args []string){
-      fmt.Printf("conmake [version: %v]\n", utils.Version)
-  },
+	Use:   "version",
+	Short: "Print the version number",
+	Run: func(cmd *cobra.Command, args []string) {
+		fmt.Printf(versionTpl, utils.Version)
+	},
 }

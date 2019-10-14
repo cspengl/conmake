@@ -14,36 +14,37 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
+//Package models contains all yaml models used by conmake
 package models
 
-import(
-  "gopkg.in/yaml.v2"
+import (
+	"gopkg.in/yaml.v2"
 )
 
-//Struct modeling the YAML Object of a Conmakefile
+//Conmakefile models the YAML Object of a Conmakefile
 type Conmakefile struct {
-  Version string                        `yaml:"version"`
-  Project string                        `yaml:"project"`
-  Steps map[string]Step                 `yaml:"steps`
-  Workstations map[string]Workstation   `yaml:"workstations`
+	Version      string                 `yaml:"version"`
+	Project      string                 `yaml:"project"`
+	Steps        map[string]Step        `yaml:"steps"`
+	Workstations map[string]Workstation `yaml:"workstations"`
 }
 
-//Struct modeling the YAML Object of a step inside a Conmakefile
+//Step models the YAML Object of a step inside a Conmakefile
 type Step struct {
-  Workstation string    `yaml:"workstation"`
-  Script []string       `yaml:"script"`
+	Workstation string   `yaml:"workstation"`
+	Script      []string `yaml:"script"`
 }
 
-//Struct modeling the YAML Object of a workstation inside a Conmakefile
+//Workstation models the YAML Object of a workstation inside a Conmakefile
 type Workstation struct {
-  Base string           `yaml:"base"`
-  Autoinit bool         `yaml:"autoinit"`
-  Script []string       `yaml:"preparation"`
+	Base     string   `yaml:"base"`
+	Autoinit bool     `yaml:"autoinit"`
+	Script   []string `yaml:"preparation"`
 }
 
-//Parses a Conmakfile from bytes into a Conmakefile struct
+//NewConmakefile parses a Conmakfile from bytes into a Conmakefile struct
 func NewConmakefile(data []byte) (*Conmakefile, error) {
-  c := Conmakefile{}
-  err := yaml.Unmarshal(data, &c)
-  return &c, err
+	c := Conmakefile{}
+	err := yaml.Unmarshal(data, &c)
+	return &c, err
 }
