@@ -14,5 +14,8 @@ workstations:
     autoinit: true
     preparation:
   test:
-    base: alpine:latest
+    base: httpd:latest
+    preparation:
+      - pwd
+      - ls -l
 ...

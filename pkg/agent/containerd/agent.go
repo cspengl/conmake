@@ -24,9 +24,9 @@ import(
   "github.com/cspengl/conmake/pkg/agent"
 
   "github.com/containerd/containerd"
-  "github.com/containerd/containerd/oci"
   "github.com/containerd/containerd/namespaces"
-  //"github.com/containerd/containerd/cio"
+
+  "github.com/opencontainers/runtime-spec/specs-go"
 
   "golang.org/x/net/context"
 )
@@ -77,34 +77,40 @@ func (a *ContainerdAgent) PerformStep(c *agent.StationConfig) error {
 
 func (a *ContainerdAgent) InitStation(c *agent.StationConfig, existing bool) (string, error) {
 
-  present, err := a.imageExists(c.Image)
+  //spinning up station
+  container, err := a.spinupStation(c)
 
   if err != nil {
     return "", err
   }
 
-  if !present {
-    err = a.downloadImage(c.Image)
-  }
-
-  if err != nil {
+  //committing new image from created container
+  if err = a.commitImage(container, container.ID()); err != nil {
+    panic(err)
     return "", err
   }
 
-  container, err := a.createContainer(
-    agent.ConstructStationContainerName(c),
-    c.Image,
-  )
-
-  if err != nil {
+  //spinnung down station
+  if err = a.stopContainer(container.ID()); err != nil {
     return "", err
   }
+
+  //deleting container
+  if err = a.deleteContainer(container.ID()); err != nil{
+    return "", err
+  }
+
+  //print list
+  a.StationList(c.ProjectName)
 
   return container.ID(), err
+
 }
 
 func (a *ContainerdAgent) DeleteStation(c *agent.StationConfig) error {
-  return a.deleteContainer(agent.ConstructStationContainerName(c))
+
+  err := a.deleteContainer(agent.ConstructStationContainerName(c))
+  return err
 }
 
 func (a *ContainerdAgent) StationExists(c *agent.StationConfig) (bool, error) {
@@ -132,61 +138,68 @@ func (a *ContainerdAgent) Info() {
 
 }
 
-func (a *ContainerdAgent) downloadImage(image string) error {
+func (a *ContainerdAgent) spinupStation(c *agent.StationConfig) (containerd.Container, error) {
+  present, err := a.imageExists(c.Image)
 
-  _, err := a.client.Pull(
-    a.ctx,
-    imageRef+"/"+image,
-    containerd.WithPullUnpack,
-  )
-
-  return err
-}
-
-func (a *ContainerdAgent) deleteImage(image string) error {
-
-  err := a.client.ImageService().Delete(
-    a.ctx,
-    imageRef+"/"+image,
-  )
-
-  return err
-}
-
-func (a *ContainerdAgent) imageExists(image string) (bool, error){
-
-  images, err := a.client.ListImages(a.ctx)
-
-  if err != nil{
-    return false, err
+  if err != nil {
+    return nil, err
   }
 
-  for _, img := range images {
-    if img.Name() == image {
-      return true, err
-    }
+  if !present {
+    err = a.downloadImage(c.Image)
   }
 
-  return false, err
+  if err != nil {
+    return nil, err
+  }
 
-}
+  cwd := agent.Workspace
 
-func (a *ContainerdAgent) createContainer(id, image string) (containerd.Container, error) {
+  mount := specs.Mount{
+    Destination: cwd,
+    Type: "none",
+    Source: c.Workspace,
+    Options: []string{"rbind", "rw"},
+  }
 
-    img, err := a.client.GetImage(a.ctx, imageRef+"/"+image)
+  cont := container{
+    ID: agent.ConstructStationContainerName(c),
+    Image_ID: c.Image,
+    Mounts: []specs.Mount{mount},
+    Cmd: []string{"sh"},
+    WorkdingDir: agent.Workspace,
+  }
 
-    if err != nil {
-      return nil, err
-    }
+  fmt.Printf("%v\n", cont)
 
-    return a.client.NewContainer(
-      a.ctx,
-      id,
-      containerd.WithNewSpec(oci.WithImageConfig(img)),
-      // containerd.WithNewSnapshot(id+"-rootfs", img),
-    )
-}
+  container, err := a.createContainer(cont)
 
-func (a *ContainerdAgent) deleteContainer(id string) (error) {
-  return a.client.ContainerService().Delete(a.ctx, id)
+  if err != nil {
+    return nil, err
+  }
+
+  err = a.runContainer(container.ID())
+
+  if err != nil {
+    return nil, err
+  }
+
+  script := []string{
+    "sh",
+    "-c",
+    agent.GenShellScript(c.Script),
+  }
+
+  executable := exec{
+    Script: script,
+    Cwd: agent.Workspace,
+  }
+
+  _, err = a.execScript(
+    container.ID(),
+    agent.ConstructStationContainerName(c)+"-runscript",
+    executable,
+  )
+
+  return container, err
 }
