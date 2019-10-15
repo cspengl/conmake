@@ -8,6 +8,42 @@
   version = "v0.4.14"
 
 [[projects]]
+  name = "github.com/Microsoft/hcsshim"
+  packages = [".","internal/guestrequest","internal/guid","internal/hcs","internal/hcserror","internal/hns","internal/interop","internal/logfields","internal/longpath","internal/mergemaps","internal/safefile","internal/schema1","internal/schema2","internal/timeout","internal/wclayer"]
+  revision = "f92b8fb9c92e17da496af5a69e3ee13fbe9916e1"
+  version = "v0.8.6"
+
+[[projects]]
+  branch = "master"
+  name = "github.com/containerd/containerd"
+  packages = [".","api/services/containers/v1","api/services/content/v1","api/services/diff/v1","api/services/events/v1","api/services/images/v1","api/services/introspection/v1","api/services/leases/v1","api/services/namespaces/v1","api/services/snapshots/v1","api/services/tasks/v1","api/services/version/v1","api/types","api/types/task","archive","archive/compression","cio","containers","content","content/proxy","defaults","diff","errdefs","events","events/exchange","filters","identifiers","images","images/archive","labels","leases","leases/proxy","log","mount","namespaces","oci","pkg/dialer","platforms","plugin","reference","reference/docker","remotes","remotes/docker","remotes/docker/schema1","rootfs","runtime/linux/runctypes","runtime/v2/runc/options","snapshots","snapshots/proxy","sys","version"]
+  revision = "9c86b8f5ed49c63b887fe94c369c3a797e79c91f"
+
+[[projects]]
+  branch = "master"
+  name = "github.com/containerd/continuity"
+  packages = ["fs","syscallx","sysx"]
+  revision = "75bee3e2ccb6402e3a986ab8bd3b17003fc0fdec"
+
+[[projects]]
+  branch = "master"
+  name = "github.com/containerd/fifo"
+  packages = ["."]
+  revision = "bda0ff6ed73c67bfb5e62bc9c697f146b7fd7f13"
+
+[[projects]]
+  branch = "master"
+  name = "github.com/containerd/ttrpc"
+  packages = ["."]
+  revision = "92c8520ef9f86600c650dd540266a007bf03670f"
+
+[[projects]]
+  branch = "master"
+  name = "github.com/containerd/typeurl"
+  packages = ["."]
+  revision = "5eb25027c9fdd675e1db2bd25af02f5db75027ab"
+
+[[projects]]
   name = "github.com/cpuguy83/go-md2man"
   packages = ["md2man"]
   revision = "7762f7e404f8416dfa1d9bb6a8c192aa9acb4d19"
@@ -32,10 +68,34 @@
   version = "v0.4.0"
 
 [[projects]]
+  branch = "master"
+  name = "github.com/docker/go-events"
+  packages = ["."]
+  revision = "e31b211e4f1cd09aa76fe4ac244571fab96ae47f"
+
+[[projects]]
   name = "github.com/docker/go-units"
   packages = ["."]
   revision = "519db1ee28dcc9fd2474ae59fca29a810482bfb1"
   version = "v0.4.0"
+
+[[projects]]
+  name = "github.com/gogo/googleapis"
+  packages = ["google/rpc"]
+  revision = "0cd1026ed3d2e6809dc241eff2e2163ec715d38e"
+  version = "v1.3.0"
+
+[[projects]]
+  name = "github.com/gogo/protobuf"
+  packages = ["proto","sortkeys","types"]
+  revision = "5628607bb4c51c3157aacc3a50f0ab707582b805"
+  version = "v1.3.1"
+
+[[projects]]
+  name = "github.com/golang/protobuf"
+  packages = ["proto","ptypes","ptypes/any","ptypes/duration","ptypes/timestamp"]
+  revision = "6c65a5562fc06764971b7c5d05c76c75e84bdbf7"
+  version = "v1.3.2"
 
 [[projects]]
   name = "github.com/inconshreveable/mousetrap"
@@ -44,10 +104,34 @@
   version = "v1.0"
 
 [[projects]]
+  name = "github.com/konsorten/go-windows-terminal-sequences"
+  packages = ["."]
+  revision = "f55edac94c9bbba5d6182a4be46d86a2c9b5b50e"
+  version = "v1.0.2"
+
+[[projects]]
   name = "github.com/opencontainers/go-digest"
   packages = ["."]
   revision = "279bed98673dd5bef374d3b6e4b09e2af76183bf"
   version = "v1.0.0-rc1"
+
+[[projects]]
+  name = "github.com/opencontainers/image-spec"
+  packages = ["identity","specs-go","specs-go/v1"]
+  revision = "d60099175f88c47cd379c4738d158884749ed235"
+  version = "v1.0.1"
+
+[[projects]]
+  name = "github.com/opencontainers/runc"
+  packages = ["libcontainer/system","libcontainer/user"]
+  revision = "baf6536d6259209c3edfa2b22237af82942d3dfa"
+  version = "v0.1.1"
+
+[[projects]]
+  name = "github.com/opencontainers/runtime-spec"
+  packages = ["specs-go"]
+  revision = "4e3b9264a330d094b0386c3703c5f379119711e8"
+  version = "v1.0.1"
 
 [[projects]]
   name = "github.com/pkg/errors"
@@ -62,6 +146,12 @@
   version = "v1.5.2"
 
 [[projects]]
+  name = "github.com/sirupsen/logrus"
+  packages = ["."]
+  revision = "839c75faf7f98a33d445d181f3018b5c3409a45e"
+  version = "v1.4.2"
+
+[[projects]]
   name = "github.com/spf13/cobra"
   packages = [".","doc"]
   revision = "f2b07da1e2c38d5f12845a4f607e2e1018cbb1f5"
@@ -74,6 +164,12 @@
   version = "v1.0.5"
 
 [[projects]]
+  branch = "master"
+  name = "github.com/syndtr/gocapability"
+  packages = ["capability"]
+  revision = "d98352740cb2c55f81556b63d4a1ec64c5a319c2"
+
+[[projects]]
   name = "github.com/tj/go-spin"
   packages = ["."]
   revision = "30574f5fadef1aa5c61d4c42e936785af9f03ada"
@@ -82,14 +178,38 @@
 [[projects]]
   branch = "master"
   name = "golang.org/x/net"
-  packages = ["context","context/ctxhttp","internal/socks","proxy"]
+  packages = ["context","context/ctxhttp","http/httpguts","http2","http2/hpack","idna","internal/socks","internal/timeseries","proxy","trace"]
   revision = "491137f692577e390404f177a0515c9f86f79754"
 
 [[projects]]
   branch = "master"
+  name = "golang.org/x/sync"
+  packages = ["errgroup","semaphore"]
+  revision = "cd5d95a43a6e21273425c7ae415d3df9ea832eeb"
+
+[[projects]]
+  branch = "master"
   name = "golang.org/x/sys"
-  packages = ["windows"]
+  packages = ["unix","windows"]
   revision = "b09406accb4736d857a32bf9444cd7edae2ffa79"
+
+[[projects]]
+  name = "golang.org/x/text"
+  packages = ["collate","collate/build","internal/colltab","internal/gen","internal/language","internal/language/compact","internal/tag","internal/triegen","internal/ucd","language","secure/bidirule","transform","unicode/bidi","unicode/cldr","unicode/norm","unicode/rangetable"]
+  revision = "342b2e1fbaa52c93f31447ad2c6abc048c63e475"
+  version = "v0.3.2"
+
+[[projects]]
+  branch = "master"
+  name = "google.golang.org/genproto"
+  packages = ["googleapis/rpc/status"]
+  revision = "548a555dbc03994223efbaba0090152849259498"
+
+[[projects]]
+  name = "google.golang.org/grpc"
+  packages = [".","balancer","balancer/base","balancer/roundrobin","binarylog/grpc_binarylog_v1","codes","connectivity","credentials","credentials/internal","encoding","encoding/proto","grpclog","health/grpc_health_v1","internal","internal/backoff","internal/balancerload","internal/binarylog","internal/channelz","internal/envconfig","internal/grpcrand","internal/grpcsync","internal/syscall","internal/transport","keepalive","metadata","naming","peer","resolver","resolver/dns","resolver/passthrough","serviceconfig","stats","status","tap"]
+  revision = "f6d0f9ee430895e87ef1ceb5ac8f39725bafceef"
+  version = "v1.24.0"
 
 [[projects]]
   name = "gopkg.in/yaml.v2"
@@ -100,6 +220,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "2fc7fd1c5fd80f280f459485fefff6e64faf2f07a288a4e55750f7790bfecc2e"
+  inputs-digest = "6ace8b927d08b58204daa4a1265b00d95806cd1ca4e4bd9203ddba8287d8226c"
   solver-name = "gps-cdcl"
   solver-version = 1

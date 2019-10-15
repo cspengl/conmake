@@ -24,6 +24,8 @@ import(
   "github.com/cspengl/conmake/pkg/agent"
 
   "github.com/containerd/containerd"
+  "github.com/containerd/containerd/oci"
+  "github.com/containerd/containerd/namespaces"
   //"github.com/containerd/containerd/cio"
 
   "golang.org/x/net/context"
@@ -58,6 +60,10 @@ func NewContainerdAgent() (*ContainerdAgent, error) {
   //Create namespace if it does not already exits
   err = cli.NamespaceService().Create(ctx, conmakeNamespace, nil)
 
+
+  //Create context of namespace
+  ctx = namespaces.WithNamespace(ctx, conmakeNamespace)
+
   return &ContainerdAgent{
     ctx:      ctx,
     client:   cli,
@@ -71,13 +77,34 @@ func (a *ContainerdAgent) PerformStep(c *agent.StationConfig) error {
 
 func (a *ContainerdAgent) InitStation(c *agent.StationConfig, existing bool) (string, error) {
 
-  err := a.downloadImage(c.Image)
+  present, err := a.imageExists(c.Image)
 
-  return "", err
+  if err != nil {
+    return "", err
+  }
+
+  if !present {
+    err = a.downloadImage(c.Image)
+  }
+
+  if err != nil {
+    return "", err
+  }
+
+  container, err := a.createContainer(
+    agent.ConstructStationContainerName(c),
+    c.Image,
+  )
+
+  if err != nil {
+    return "", err
+  }
+
+  return container.ID(), err
 }
 
 func (a *ContainerdAgent) DeleteStation(c *agent.StationConfig) error {
-  return nil
+  return a.deleteContainer(agent.ConstructStationContainerName(c))
 }
 
 func (a *ContainerdAgent) StationExists(c *agent.StationConfig) (bool, error) {
@@ -95,7 +122,7 @@ func (a *ContainerdAgent) StationList(projectname string) (error) {
   }
 
   for _, img := range images{
-    fmt.Printf("%v\n", img)
+    fmt.Printf("%v\n", img.Name())
   }
 
   return err
@@ -126,23 +153,40 @@ func (a *ContainerdAgent) deleteImage(image string) error {
   return err
 }
 
-// func (a *ContainerdAgent) createContainer(id, image string) (containerd.Container, error) {
-//
-//     img, err := a.client.GetImage(a.ctx, imageReg+"/"+image)
-//
-//     if err != nil {
-//       return nil, err
-//     }
-//
-//     container, err := a.client.NewContainer(
-//       a.ctx,
-//       id,
-//       containerd.WithNewSpec(oci.WithImageConfig(img)),
-//       containerd.WithNewSnapshot(id+"-rootfs", img),
-//     )
-//
-//     task, err := container.NewTask(a.ctx, cio.Stdio)
-//     defer task.Delete(a.ctx)
-//
-//     err = task.Start(a.ctx)
-// }
+func (a *ContainerdAgent) imageExists(image string) (bool, error){
+
+  images, err := a.client.ListImages(a.ctx)
+
+  if err != nil{
+    return false, err
+  }
+
+  for _, img := range images {
+    if img.Name() == image {
+      return true, err
+    }
+  }
+
+  return false, err
+
+}
+
+func (a *ContainerdAgent) createContainer(id, image string) (containerd.Container, error) {
+
+    img, err := a.client.GetImage(a.ctx, imageRef+"/"+image)
+
+    if err != nil {
+      return nil, err
+    }
+
+    return a.client.NewContainer(
+      a.ctx,
+      id,
+      containerd.WithNewSpec(oci.WithImageConfig(img)),
+      // containerd.WithNewSnapshot(id+"-rootfs", img),
+    )
+}
+
+func (a *ContainerdAgent) deleteContainer(id string) (error) {
+  return a.client.ContainerService().Delete(a.ctx, id)
+}
