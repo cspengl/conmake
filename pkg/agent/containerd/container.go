@@ -94,7 +94,7 @@ func (a *ContainerdAgent) runContainer(id string) (error){
   //create new task
   task, err := c.NewTask(
     a.ctx,
-    cio.NewCreator(),
+    cio.NewCreator(cio.WithStdio),
   )
 
   if err != nil {

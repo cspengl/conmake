@@ -19,8 +19,6 @@ limitations under the License.
 package containerd
 
 import(
-  "log"
-  "github.com/containerd/containerd/images"
   "github.com/containerd/containerd"
 )
 
@@ -61,35 +59,20 @@ func (a *ContainerdAgent) imageExists(image string) (bool, error){
   return false, err
 }
 
+func (a *ContainerdAgent) removeImage(name string) (error) {
+  return a.client.ImageService().Delete(a.ctx, name)
+}
+
 func (a *ContainerdAgent) commitImage(container containerd.Container, name string) (error){
 
-  //getting task
-  task, err := container.Task(a.ctx, nil)
-
+  //getting the image
+  image, err := container.Image(a.ctx)
   if err != nil {
     return err
   }
 
-  //getting Checkpoint
-  image, err := task.Checkpoint(
-    a.ctx,
-    containerd.WithCheckpointName(name),
-  )
-
-  if err != nil {
-    return err
-  }
-
-  //construct metaimage
-  metaimage := images.Image{
-    Name: name,
-    Target: image.Target(),
-  }
-
-  //add image to image service
-  a.client.ImageService().Create(a.ctx, metaimage)
-
-  log.Println("image committed")
+  //updating container
+  err = container.Update(a.ctx, WithCommit(image))
 
   return err
 }

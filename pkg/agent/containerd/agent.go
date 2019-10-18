@@ -162,11 +162,17 @@ func (a *ContainerdAgent) spinupStation(c *agent.StationConfig) (containerd.Cont
     Options: []string{"rbind", "rw"},
   }
 
+  script := []string{
+    "sh",
+    "-c",
+    agent.GenShellScript(c.Script),
+  }
+
   cont := container{
     ID: agent.ConstructStationContainerName(c),
     Image_ID: c.Image,
     Mounts: []specs.Mount{mount},
-    Cmd: []string{"sh"},
+    Cmd: script,
     WorkdingDir: agent.Workspace,
   }
 
@@ -183,23 +189,6 @@ func (a *ContainerdAgent) spinupStation(c *agent.StationConfig) (containerd.Cont
   if err != nil {
     return nil, err
   }
-
-  script := []string{
-    "sh",
-    "-c",
-    agent.GenShellScript(c.Script),
-  }
-
-  executable := exec{
-    Script: script,
-    Cwd: agent.Workspace,
-  }
-
-  _, err = a.execScript(
-    container.ID(),
-    agent.ConstructStationContainerName(c)+"-runscript",
-    executable,
-  )
 
   return container, err
 }

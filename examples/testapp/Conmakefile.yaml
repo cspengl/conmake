@@ -18,4 +18,5 @@ workstations:
     preparation:
       - pwd
       - ls -l
+      - echo "Hello World!" > /test.txt
 ...
