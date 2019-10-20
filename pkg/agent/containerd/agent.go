@@ -81,6 +81,7 @@ func (a *ContainerdAgent) InitStation(c *agent.StationConfig, existing bool) (st
   container, err := a.spinupStation(c)
 
   if err != nil {
+    panic(err)
     return "", err
   }
 
@@ -181,12 +182,14 @@ func (a *ContainerdAgent) spinupStation(c *agent.StationConfig) (containerd.Cont
   container, err := a.createContainer(cont)
 
   if err != nil {
+    panic(err)
     return nil, err
   }
 
   err = a.runContainer(container.ID())
 
   if err != nil {
+    panic(err)
     return nil, err
   }
 

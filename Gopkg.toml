@@ -43,4 +43,3 @@
 
 [[constraint]]
   name = "github.com/containerd/containerd"
-  branch = "master"

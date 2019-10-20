@@ -16,7 +16,7 @@
 [[projects]]
   branch = "master"
   name = "github.com/containerd/containerd"
-  packages = [".","api/services/containers/v1","api/services/content/v1","api/services/diff/v1","api/services/events/v1","api/services/images/v1","api/services/introspection/v1","api/services/leases/v1","api/services/namespaces/v1","api/services/snapshots/v1","api/services/tasks/v1","api/services/version/v1","api/types","api/types/task","archive","archive/compression","cio","containers","content","content/proxy","defaults","diff","errdefs","events","events/exchange","filters","identifiers","images","images/archive","labels","leases","leases/proxy","log","mount","namespaces","oci","pkg/dialer","platforms","plugin","reference","reference/docker","remotes","remotes/docker","remotes/docker/schema1","rootfs","runtime/linux/runctypes","runtime/v2/runc/options","snapshots","snapshots/proxy","sys","version"]
+  packages = [".","api/services/containers/v1","api/services/content/v1","api/services/diff/v1","api/services/events/v1","api/services/images/v1","api/services/introspection/v1","api/services/leases/v1","api/services/namespaces/v1","api/services/snapshots/v1","api/services/tasks/v1","api/services/version/v1","api/types","api/types/task","archive","archive/compression","cio","containers","content","content/proxy","defaults","diff","diff/apply","errdefs","events","events/exchange","filters","identifiers","images","images/archive","labels","leases","leases/proxy","log","mount","namespaces","oci","pkg/dialer","platforms","plugin","reference","reference/docker","remotes","remotes/docker","remotes/docker/schema1","rootfs","runtime/linux/runctypes","runtime/v2/runc/options","snapshots","snapshots/proxy","sys","version"]
   revision = "9c86b8f5ed49c63b887fe94c369c3a797e79c91f"
 
 [[projects]]
@@ -220,6 +220,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "85978579c1f92ae939ef1d69ff862af39759f31a7374f47fd3b86e3d951d6271"
+  inputs-digest = "83910cc3b5fd5e139a4de9ebbfc940178b5ffb41320d7eb1ea70d3f369505bfa"
   solver-name = "gps-cdcl"
   solver-version = 1

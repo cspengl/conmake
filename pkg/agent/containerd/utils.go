@@ -20,6 +20,8 @@ package containerd
 
 import(
   "time"
+  "log"
+  "os"
 
   "github.com/containerd/containerd"
   "github.com/containerd/containerd/containers"
@@ -59,7 +61,12 @@ func WithCommit(image containerd.Image) containerd.UpdateContainerOpts {
   return func(ctx context.Context, client *containerd.Client, c *containers.Container) error {
     revision, err := save(ctx, client, image, c)
 
+    log.Printf("%v\n", revision)
+
+
     if err != nil {
+      panic(err)
+      os.Exit(1)
       return err
     }
 

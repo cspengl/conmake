@@ -88,6 +88,7 @@ func (a *ContainerdAgent) runContainer(id string) (error){
   c, err := a.getContainer(id)
 
   if err != nil  {
+    panic(err)
     return err
   }
 
@@ -98,11 +99,16 @@ func (a *ContainerdAgent) runContainer(id string) (error){
   )
 
   if err != nil {
+    panic(err)
     return err
   }
 
   //starting task
   err = task.Start(a.ctx)
+
+  if err != nil {
+    panic(err)
+  }
 
   return err
 

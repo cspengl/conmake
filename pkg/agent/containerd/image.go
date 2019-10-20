@@ -66,8 +66,10 @@ func (a *ContainerdAgent) removeImage(name string) (error) {
 func (a *ContainerdAgent) commitImage(container containerd.Container, name string) (error){
 
   //getting the image
-  image, err := container.Image(a.ctx)
+  image, err := a.client.GetImage(a.ctx, "docker.io/library/httpd:latest")
+
   if err != nil {
+    panic(err)
     return err
   }
 
