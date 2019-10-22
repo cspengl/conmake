@@ -20,6 +20,11 @@ package containerd
 
 import(
   "github.com/containerd/containerd"
+  "github.com/containerd/containerd/diff/apply"
+  "github.com/containerd/containerd/rootfs"
+  "github.com/containerd/containerd/images"
+
+  "github.com/opencontainers/image-spec/identity"
 )
 
 func (a *ContainerdAgent) downloadImage(image string) error {
@@ -65,16 +70,61 @@ func (a *ContainerdAgent) removeImage(name string) (error) {
 
 func (a *ContainerdAgent) commitImage(container containerd.Container, name string) (error){
 
-  //getting the image
-  image, err := a.client.GetImage(a.ctx, "docker.io/library/httpd:latest")
+  //getting image
+  image, err := container.Image(a.ctx)
 
   if err != nil {
-    panic(err)
     return err
   }
 
-  //updating container
-  err = container.Update(a.ctx, WithCommit(image))
+  //getting diffIDs
+  diffIDs, err := image.RootFS(a.ctx)
+
+  //gettings parent
+  parent := identity.ChainID(diffIDs).String()
+
+  //getting containermodel
+  containermodel, err := a.client.ContainerService().Get(a.ctx, container.ID())
+
+  if err != nil {
+    return err
+  }
+
+  //getting snappshotter
+  snapshotter := a.client.SnapshotService(containermodel.Snapshotter)
+
+  //create active snapshot
+  mounts, err := snapshotter.Prepare(a.ctx, name, parent)
+
+  if err != nil {
+    return err
+  }
+
+  //creating diff to base image
+  diff, err := rootfs.CreateDiff(a.ctx, containermodel.SnapshotKey, snapshotter, a.client.DiffService())
+
+  if err != nil {
+    return err
+  }
+
+  //getting applier
+  applier := apply.NewFileSystemApplier(a.client.ContentStore())
+
+  //apply diff
+  _, err = applier.Apply(a.ctx, diff, mounts)
+
+  if err != nil {
+    return err
+  }
+
+  //construct image
+  imageModel := images.Image{
+    Name: name,
+    Target: image.Target(),
+  }
+
+  //add image to contentstore
+  _, err = a.client.ImageService().Create(a.ctx, imageModel)
 
   return err
 }

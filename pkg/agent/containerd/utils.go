@@ -95,6 +95,10 @@ func save(ctx context.Context, client *containerd.Client, updatedImage container
     return nil, err
   }
 
+  if err := service.Commit(ctx, "test", snapshot.Key); err != nil {
+    return nil, err
+  }
+
   return snapshot, nil
 }
 
@@ -111,7 +115,7 @@ func create(ctx context.Context, client *containerd.Client, i containerd.Image, 
 
   labels := map[string]string{
 		gcRoot:           r.Timestamp.Format(time.RFC3339),
-		ImageLabel:       i.Name(),
+		ImageLabel:       id,
 		ContainerIDLabel: id,
 	}
 	if previous != "" {
