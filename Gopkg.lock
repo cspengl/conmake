@@ -17,7 +17,7 @@
   branch = "master"
   name = "github.com/containerd/containerd"
   packages = [".","api/services/containers/v1","api/services/content/v1","api/services/diff/v1","api/services/events/v1","api/services/images/v1","api/services/introspection/v1","api/services/leases/v1","api/services/namespaces/v1","api/services/snapshots/v1","api/services/tasks/v1","api/services/version/v1","api/types","api/types/task","archive","archive/compression","cio","containers","content","content/proxy","defaults","diff","diff/apply","errdefs","events","events/exchange","filters","identifiers","images","images/archive","labels","leases","leases/proxy","log","mount","namespaces","oci","pkg/dialer","platforms","plugin","reference","reference/docker","remotes","remotes/docker","remotes/docker/schema1","rootfs","runtime/linux/runctypes","runtime/v2/runc/options","snapshots","snapshots/proxy","sys","version"]
-  revision = "9c86b8f5ed49c63b887fe94c369c3a797e79c91f"
+  revision = "36c4260e6fa15cb20012cfe95f322ef85cf771ca"
 
 [[projects]]
   branch = "master"
@@ -220,6 +220,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "83910cc3b5fd5e139a4de9ebbfc940178b5ffb41320d7eb1ea70d3f369505bfa"
+  inputs-digest = "7cf301e083ef3b500cfd098a2fcaeb238eced87c7b60e7d90105c23a857207ca"
   solver-name = "gps-cdcl"
   solver-version = 1

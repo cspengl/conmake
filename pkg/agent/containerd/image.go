@@ -19,10 +19,12 @@ limitations under the License.
 package containerd
 
 import(
+  "time"
+
   "github.com/containerd/containerd"
+  "github.com/containerd/containerd/snapshots"
   "github.com/containerd/containerd/diff/apply"
   "github.com/containerd/containerd/rootfs"
-  "github.com/containerd/containerd/images"
 
   "github.com/opencontainers/image-spec/identity"
 )
@@ -93,8 +95,13 @@ func (a *ContainerdAgent) commitImage(container containerd.Container, name strin
   //getting snappshotter
   snapshotter := a.client.SnapshotService(containermodel.Snapshotter)
 
+  //defining labels
+  labels := map[string]string{
+    "containerd.io/gc.root": time.Now().UTC().Format(time.RFC3339),
+  }
+
   //create active snapshot
-  mounts, err := snapshotter.Prepare(a.ctx, name, parent)
+  mounts, err := snapshotter.Prepare(a.ctx, container.ID(), parent, snapshots.WithLabels(labels))
 
   if err != nil {
     return err
@@ -117,14 +124,8 @@ func (a *ContainerdAgent) commitImage(container containerd.Container, name strin
     return err
   }
 
-  //construct image
-  imageModel := images.Image{
-    Name: name,
-    Target: image.Target(),
-  }
-
-  //add image to contentstore
-  _, err = a.client.ImageService().Create(a.ctx, imageModel)
+  //committing snapshot
+  err = snapshotter.Commit(a.ctx, name, container.ID())
 
   return err
 }

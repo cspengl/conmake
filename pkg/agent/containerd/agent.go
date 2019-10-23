@@ -86,7 +86,7 @@ func (a *ContainerdAgent) InitStation(c *agent.StationConfig, existing bool) (st
   }
 
   //committing new image from created container
-  if err = a.commitImage(container, container.ID()); err != nil {
+  if err = a.commitImage(container, "testimage"); err != nil {
     panic(err)
     return "", err
   }
