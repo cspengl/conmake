@@ -22,10 +22,12 @@ import(
   "time"
 
   "github.com/containerd/containerd"
+  "github.com/containerd/containerd/images"
   "github.com/containerd/containerd/snapshots"
-  "github.com/containerd/containerd/diff/apply"
+  "github.com/containerd/containerd/diff"
   "github.com/containerd/containerd/rootfs"
 
+  ocispec "github.com/opencontainers/image-spec/specs-go/v1"
   "github.com/opencontainers/image-spec/identity"
 )
 
@@ -72,6 +74,15 @@ func (a *ContainerdAgent) removeImage(name string) (error) {
 
 func (a *ContainerdAgent) commitImage(container containerd.Container, name string) (error){
 
+  //Prevent garbage collection
+  ctx, done, err := a.client.WithLease(a.ctx)
+  if err != nil {
+    return err
+  }
+  defer done(ctx)
+
+  a.ctx = ctx
+
   //getting image
   image, err := container.Image(a.ctx)
 
@@ -101,24 +112,21 @@ func (a *ContainerdAgent) commitImage(container containerd.Container, name strin
   }
 
   //create active snapshot
-  mounts, err := snapshotter.Prepare(a.ctx, container.ID(), parent, snapshots.WithLabels(labels))
+  _, err = snapshotter.Prepare(a.ctx, container.ID(), parent, snapshots.WithLabels(labels))
 
   if err != nil {
     return err
   }
 
   //creating diff to base image
-  diff, err := rootfs.CreateDiff(a.ctx, containermodel.SnapshotKey, snapshotter, a.client.DiffService())
-
-  if err != nil {
-    return err
-  }
-
-  //getting applier
-  applier := apply.NewFileSystemApplier(a.client.ContentStore())
-
-  //apply diff
-  _, err = applier.Apply(a.ctx, diff, mounts)
+  diff, err := rootfs.CreateDiff(
+    a.ctx,
+    containermodel.SnapshotKey,
+    snapshotter,
+    a.client.DiffService(),
+    diff.WithMediaType(ocispec.MediaTypeImageLayerGzip),
+    diff.WithReference("custom-ref"),
+  )
 
   if err != nil {
     return err
@@ -126,6 +134,22 @@ func (a *ContainerdAgent) commitImage(container containerd.Container, name strin
 
   //committing snapshot
   err = snapshotter.Commit(a.ctx, name, container.ID())
+
+  //add layer
+  newImgDesc, err := a.addLayerToManifest(image.Target(), diff, diff)
+
+  if err != nil {
+    panic(err)
+  }
+
+  //create image
+  imageModel := images.Image{
+    Name: name,
+    Target: newImgDesc,
+  }
+
+  //add image to store
+  _, err = a.client.ImageService().Create(a.ctx, imageModel)
 
   return err
 }
