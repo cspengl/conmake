@@ -14,8 +14,8 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-//Package models contains all yaml models used by conmake
-package models
+////Package v1 is the package containing version 1 of the conmake API
+package v1
 
 import (
 	"gopkg.in/yaml.v2"
