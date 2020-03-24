@@ -15,7 +15,7 @@ limitations under the License.
 */
 
 //Package models contains all yaml models used by conmake
-package models
+package v1
 
 //Agent represents the yaml object for defining an agent
 type Agent struct {

@@ -14,8 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-//Package conmaker is the core package of conmake implementing the functions
-//called by the commands.
+//Package conmaker is the main package for conmake
 package conmaker
 
 import (
@@ -26,19 +25,19 @@ import (
 
 	"github.com/cspengl/conmake/pkg/agent"
 	"github.com/cspengl/conmake/pkg/agent/docker"
-	"github.com/cspengl/conmake/pkg/models"
+	"github.com/cspengl/conmake/api/v1"
 )
 
 //Conmaker models the conmaker based on an agent to use, a conmakefile and
 //the project path.
 type Conmaker struct {
 	agent       agent.Agent
-	conmakefile *models.Conmakefile
+	conmakefile *v1.Conmakefile
 	projectpath string
 }
 
 //NewConmaker returns an instance of Conmaker based on existing agent and conmakefile
-func NewConmaker(a agent.Agent, c *models.Conmakefile, p string) *Conmaker {
+func NewConmaker(a agent.Agent, c *v1.Conmakefile, p string) *Conmaker {
 	return &Conmaker{
 		agent:       a,
 		conmakefile: c,
@@ -60,7 +59,7 @@ func InitConmaker(projectpath, conmakefile string) (*Conmaker, error) {
 	}
 
 	//Parse file and construct models
-	c, err := models.NewConmakefile(f)
+	c, err := v1.NewConmakefile(f)
 
 	if err != nil {
 		log.Fatal("Could not parse Conmakefile")
