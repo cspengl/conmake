@@ -26,6 +26,11 @@ const (
 	Workspace = "/workspace/"
 )
 
+//Defining Agent signs
+const (
+	SignDocker = "docker"
+)
+
 //StationConfig models the configuration of a station to be spinned up and used
 type StationConfig struct {
 	//Name of the project

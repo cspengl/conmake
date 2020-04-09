@@ -43,6 +43,9 @@ func ConmakerFromCmd() (*conmaker.Conmaker, error) {
 	//Creating agent
 	var cmAgent agent.Agent
 	switch flags.Agent {
+	case agent.SignDocker:
+		cmAgent, err = docker.NewDockerAgentFromEnv()
+		break
 	default:
 		cmAgent, err = docker.NewDockerAgentFromEnv()
 	}
