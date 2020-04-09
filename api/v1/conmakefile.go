@@ -41,10 +41,3 @@ type Workstation struct {
 	Autoinit bool     `yaml:"autoinit"`
 	Script   []string `yaml:"preparation"`
 }
-
-//NewConmakefile parses a Conmakfile from bytes into a Conmakefile struct
-func NewConmakefile(data []byte) (*Conmakefile, error) {
-	c := Conmakefile{}
-	err := yaml.Unmarshal(data, &c)
-	return &c, err
-}
