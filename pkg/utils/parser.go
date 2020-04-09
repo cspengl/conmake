@@ -1,5 +1,5 @@
 /*
-Copyright 2019 cspengl
+Copyright 2020 cspengl
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -14,33 +14,32 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package station
+package utils
 
 import (
-	"github.com/spf13/cobra"
+	"io/ioutil"
+	"log"
 
-	"github.com/cspengl/conmake/pkg/cmd/utils"
+	"gopkg.in/yaml.v2"
+
+	"github.com/cspengl/conmake/api/v1"
 )
 
-var cleanCmd = &cobra.Command{
-	Use:   "clean <station>",
-	Short: "Creates a new station from base image",
-	Args:  cobra.ExactArgs(1),
-	Run: func(cmd *cobra.Command, args []string) {
-		cleanStation(args[0])
-	},
+func ConmakefileFromFile(path string) (*v1.Conmakefile, error) {
+	//Read file
+	f, err := ioutil.ReadFile(path)
+
+	if err != nil {
+		log.Fatal("Conmakefile not found")
+		return nil, err
+	}
+
+	return ConmakefileFromByte(f);
 }
 
-func cleanStation(stationName string) {
-	cm, err := utils.ConmakerFromCmd()
-
-	if err != nil {
-		panic(err)
-	}
-
-	err = cm.CleanStation(stationName)
-
-	if err != nil {
-		panic(err)
-	}
+//FromPath parses a Conmakfile from bytes into a Conmakefile struct
+func ConmakefileFromByte(data []byte) (*v1.Conmakefile, error) {
+	c := v1.Conmakefile{}
+	err := yaml.Unmarshal(data, &c)
+	return &c, err
 }

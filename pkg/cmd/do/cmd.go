@@ -18,10 +18,9 @@ limitations under the License.
 package do
 
 import (
-	"github.com/cspengl/conmake/pkg/cmd/flags"
-	"github.com/cspengl/conmake/pkg/conmaker"
-
 	"github.com/spf13/cobra"
+
+	"github.com/cspengl/conmake/pkg/cmd/utils"
 )
 
 //DoCmd represents the command performing a step from a Conmakfile
@@ -35,7 +34,7 @@ var DoCmd = &cobra.Command{
 }
 
 func run(args []string) {
-	cm, err := conmaker.InitConmaker(flags.ProjectPath, flags.ConmakefilePath)
+	cm, err := utils.ConmakerFromCmd()
 	if err != nil {
 		panic(err)
 	}

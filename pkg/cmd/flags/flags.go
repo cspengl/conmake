@@ -22,3 +22,6 @@ var ProjectPath string
 
 //ConmakefilePath set by the -f or --conmakefile flag
 var ConmakefilePath string
+
+//Agent set by the -a or --agent flag
+var Agent string

@@ -19,12 +19,9 @@ package conmaker
 
 import (
 	"errors"
-	"io/ioutil"
 	"log"
-	"os"
 
 	"github.com/cspengl/conmake/pkg/agent"
-	"github.com/cspengl/conmake/pkg/agent/docker"
 	"github.com/cspengl/conmake/api/v1"
 )
 
@@ -38,46 +35,12 @@ type Conmaker struct {
 
 //NewConmaker returns an instance of Conmaker based on existing agent and conmakefile
 func NewConmaker(a agent.Agent, c *v1.Conmakefile, p string) *Conmaker {
+
 	return &Conmaker{
 		agent:       a,
 		conmakefile: c,
 		projectpath: p,
 	}
-}
-
-//InitConmaker initializes a Conmaker based on a projectpath and a path to a Conmakefile
-//Currently using the local docker daemon as agent per default
-//since its the only supported
-func InitConmaker(projectpath, conmakefile string) (*Conmaker, error) {
-
-	//Read file
-	f, err := ioutil.ReadFile(conmakefile)
-
-	if err != nil {
-		log.Fatal("Conmakefile not found")
-		return nil, err
-	}
-
-	//Parse file and construct models
-	c, err := v1.NewConmakefile(f)
-
-	if err != nil {
-		log.Fatal("Could not parse Conmakefile")
-		return nil, err
-	}
-
-	//Construct agent
-	a, err := docker.NewDockerAgentFromEnv()
-
-	if projectpath == "./" {
-		projectpath, err = os.Getwd()
-	}
-
-	return &Conmaker{
-		agent:       a,
-		conmakefile: c,
-		projectpath: projectpath,
-	}, err
 }
 
 //Perform performs a step of the Conmakefile associated to the Conmaker with the

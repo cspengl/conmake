@@ -17,10 +17,9 @@ limitations under the License.
 package station
 
 import (
-	"github.com/cspengl/conmake/pkg/cmd/flags"
-	"github.com/cspengl/conmake/pkg/conmaker"
-
 	"github.com/spf13/cobra"
+
+	"github.com/cspengl/conmake/pkg/cmd/utils"
 )
 
 var initCmd = &cobra.Command{
@@ -34,7 +33,7 @@ var initCmd = &cobra.Command{
 
 func initStation(stationName string) {
 
-	cm, err := conmaker.InitConmaker(flags.ProjectPath, flags.ConmakefilePath)
+	cm, err := utils.ConmakerFromCmd()
 
 	if err != nil {
 		panic(err)

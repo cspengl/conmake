@@ -50,6 +50,7 @@ func init() {
 	//Adding flags
 	ConmakeCmd.PersistentFlags().StringVarP(&flags.ProjectPath, "path", "p", "./", "Absolute path to the project")
 	ConmakeCmd.PersistentFlags().StringVarP(&flags.ConmakefilePath, "conmakefile", "f", "./Conmakefile.yaml", "Path to the Conmakefile to use")
+	ConmakeCmd.PersistentFlags().StringVarP(&flags.Agent, "agent", "a", "docker", "Selection of the agent (Currently just docker is supported)")
 }
 
 //Execute executes the root command.
