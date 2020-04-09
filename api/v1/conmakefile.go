@@ -17,10 +17,6 @@ limitations under the License.
 ////Package v1 is the package containing version 1 of the conmake API
 package v1
 
-import (
-	"gopkg.in/yaml.v2"
-)
-
 //Conmakefile models the YAML Object of a Conmakefile
 type Conmakefile struct {
 	Version      string                 `yaml:"version"`
