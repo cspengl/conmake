@@ -21,8 +21,8 @@ import (
 	"errors"
 	"log"
 
-	"github.com/cspengl/conmake/pkg/agent"
 	"github.com/cspengl/conmake/api/v1"
+	"github.com/cspengl/conmake/pkg/agent"
 )
 
 //Conmaker models the conmaker based on an agent to use, a conmakefile and

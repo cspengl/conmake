@@ -32,7 +32,7 @@ import (
 )
 
 func ConmakerFromCmd() (*conmaker.Conmaker, error) {
-	
+
 	//Reading Conmakefile from path
 	cmConmakefile, err := utils.ConmakefileFromFile(flags.ConmakefilePath)
 
@@ -66,6 +66,3 @@ func ConmakerFromCmd() (*conmaker.Conmaker, error) {
 		cmConmakefile,
 		cmProjectpath), nil
 }
-
-
-

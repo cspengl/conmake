@@ -267,7 +267,7 @@ func (a *DockerAgent) StationExists(config *agent.StationConfig) (bool, error) {
 }
 
 //StationList prints a list of stations
-func (a *DockerAgent) StationList(projectname string) (error) {
+func (a *DockerAgent) StationList(projectname string) error {
 	images, err := a.client.ImageList(
 		a.ctx,
 		types.ImageListOptions{
@@ -279,10 +279,10 @@ func (a *DockerAgent) StationList(projectname string) (error) {
 		return err
 	}
 
-	for _, img := range images{
+	for _, img := range images {
 		for _, tag := range img.RepoTags {
-			if strings.Contains(tag, projectname){
-						fmt.Printf("%v\n", img.RepoTags)
+			if strings.Contains(tag, projectname) {
+				fmt.Printf("%v\n", img.RepoTags)
 			}
 		}
 	}

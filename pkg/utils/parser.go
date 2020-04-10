@@ -34,7 +34,7 @@ func ConmakefileFromFile(path string) (*v1.Conmakefile, error) {
 		return nil, err
 	}
 
-	return ConmakefileFromByte(f);
+	return ConmakefileFromByte(f)
 }
 
 //FromPath parses a Conmakfile from bytes into a Conmakefile struct
