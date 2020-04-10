@@ -1,0 +1,16 @@
+---
+version: v1
+project: testapp
+
+steps:
+  build:
+    workstation: building
+    script:
+      - gcc -static -o testapp testapp.c
+ 
+workstations:
+  building:
+    base: gcc:latest
+    autoinit: true
+    preparation:
+...
