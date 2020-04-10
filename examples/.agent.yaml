@@ -1,4 +1,0 @@
-type: docker
-config:
-  api_version: 1.40
-  endpoint: local
