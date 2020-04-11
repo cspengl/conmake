@@ -1,5 +1,5 @@
 /*
-Copyright 2019 cspengl
+Copyright 2020 cspengl
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -17,76 +17,44 @@ limitations under the License.
 //Package agent contains the generic agent definition
 package agent
 
-const (
-	//ConmakeTag defines the tag for tagging conmake images
-	ConmakeTag = "conmake"
+import (
+	"io"
 
-	//Workspace defines the mounting target for the projectpath inside
-	//the workstation container
-	Workspace = "/workspace/"
-)
-
-//Defining Agent signs
-const (
-	SignDocker = "docker"
+	ocispec "github.com/opencontainers/runtime-spec/specs-go"
 )
 
 //StationConfig models the configuration of a station to be spinned up and used
 type StationConfig struct {
-	//Name of the project
-	ProjectName string
-	//Name of the station
-	StationName string
-	//Used image
-	Image string
-	//Script to be executed on the station
-	Script []string
-	//Mounting source
-	Workspace string
+	// ContainerID is the id of the station container
+	ContainerID string
+	// ImageID is the id of the image for the station to use 
+	// (either base or existing station image)
+	ImageID 	string
+	// Mounts are OCI Mounts for the station container (workspace mount)
+	Mounts		[]ocispec.Mount
+	// Process is the OCI process to execute on the staton container
+	Process		ocispec.Process
+	// User is the OCI user which executes the specified process
+	User		ocispec.User
+	// Output is a ReadCloser for processing the output of the process (standard output)
+	Output		io.ReadCloser
 }
 
-//Agent models a generic agent performing steps based on
-//a given StationConfig
+// Agent defines a generic interface for working with
+// station containers on a OCI runtime
 type Agent interface {
-	PerformStep(*StationConfig) error
-	InitStation(*StationConfig, bool) (string, error)
-	DeleteStation(*StationConfig) error
-	StationExists(*StationConfig) (bool, error)
-	StationList(string) error
-	Info()
-}
-
-//GenShellScript generates a shell script from a list of commands
-func GenShellScript(script []string) string {
-	res := ""
-
-	if len(script) == 0 {
-		return ""
-	}
-
-	for _, cmd := range script {
-		res = res + cmd + " && "
-	}
-
-	return res[:len(res)-4]
-}
-
-// func PerformOnHost(script []string) error {
-// 	//TODO: Has to be implemented
-// 	return nil
-// }
-
-//ConstructStationImageName constructs the name of an image based on a given station configuration
-func ConstructStationImageName(config *StationConfig) string {
-	return ConstructStationImageNameFromRaw(config.ProjectName, config.StationName)
-}
-
-//ConstructStationImageNameFromRaw constructs the image name based on the project name and the stationname
-func ConstructStationImageNameFromRaw(projectname, stationname string) string {
-	return projectname + "/" + stationname + ":" + ConmakeTag
-}
-
-//ConstructStationContainerName constructs the name of a container based on a given station config.
-func ConstructStationContainerName(config *StationConfig) string {
-	return config.ProjectName + "-" + config.StationName
+	// ImagePresent returns if an image specific by imageID exists.
+	ImagePresent(imageID string) (bool, error)
+	// DownloadImage downloads an image specified by imageID and returns
+	// a io.ReadCloser for processing the download (e.g. progress)
+	DownloadImage(imageID string) (io.ReadCloser, string)
+	// CreateStationContainer creates a container based on a StationConfig.
+	CreateStationContainer(config StationConfig) (error)
+	// RunStationContainer runs a created station container specified by a containerID
+	RunStationContainer(containerID string) (error)
+	// DestroyStationContainer destroys a station container specified by a containerID
+	DestroyStationContainer(containerID string) (error)
+	// SaveStationContainer saves a stopped station container specified by 
+	// a containerID as a new image with the given imageID 
+	SaveStationContainer(containerID, imageID string) (error)
 }
