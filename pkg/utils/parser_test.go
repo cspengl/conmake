@@ -24,23 +24,31 @@ import (
 	"github.com/cspengl/conmake/pkg/utils"
 )
 
-const filePath = "/../../testdata/Conmakefile.yaml"
+const (
+	filePath 		= "/../../testdata/Conmakefile.yaml"
+	invalidPath		= "/../../testdata/NotExisting.yaml"
+)
 
-func getPath() string {
-	pwd, _ := os.Getwd()
-	return pwd + filePath
-}
+var cwd, _ = os.Getwd() 
 
 func TestConmakeFileFromFile(t *testing.T) {
-
-	_, err := utils.ConmakefileFromFile(getPath())
+	_, err := utils.ConmakefileFromFile(cwd + filePath)
 	if err != nil {
 		t.Fail()
 	}
 }
 
+func TestConmakeFileFromInvalidFile(t *testing.T) {
+	_, err := utils.ConmakefileFromFile(cwd + invalidPath)
+
+	t.Log(err)
+	if err == nil {
+		t.Error("Failed")
+	}
+}
+
 func TestConmakefileFromByte(t *testing.T) {
-	f, err := ioutil.ReadFile(getPath())
+	f, err := ioutil.ReadFile(cwd + filePath)
 
 	if err != nil {
 		t.Fail()

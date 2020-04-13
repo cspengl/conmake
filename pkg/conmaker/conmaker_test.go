@@ -121,6 +121,15 @@ func TestPerformStep(t *testing.T) {
 	}
 }
 
+func TestPerformInvalidStep(t *testing.T) {
+	cm := getConmaker()
+
+	err := cm.PerformStep("doesnotexist")
+	if err == nil {
+		t.Fail()
+	}
+}
+
 func TestInitStation(t *testing.T) {
 	cm := getConmaker()
 
@@ -142,6 +151,36 @@ func TestInitStation(t *testing.T) {
 	}
 }
 
+func TestInitStationWithBasePresent(t *testing.T) {
+	cm := getConmaker()
+
+	//Downloading base image
+	aStub.DownloadImage("gcc:latest")
+
+	//Init station
+	err := cm.InitStation("building")
+
+	//Check that there is no error
+	if err != nil {
+		t.Fail()
+	}
+
+	//Check that there is a prepared station image
+	if _, ok := aStub.images["testapp/building:conmake"]; !ok {
+		t.Fail()
+	}
+}
+
+func TestInitInvalidStation(t *testing.T) {
+	cm := getConmaker()
+
+	err := cm.InitStation("doesnotexist")
+
+	if err == nil {
+		t.Fail()
+	}
+}
+
 func TestDeleteStation(t *testing.T) {
 	cm := getConmaker()
 
@@ -154,6 +193,17 @@ func TestDeleteStation(t *testing.T) {
 
 	//Check that there is no station image
 	if _, ok := aStub.images["testapp/building:conmake"]; ok {
+		t.Fail()
+	}
+}
+
+func TestDeleteInvalidStation(t *testing.T) {
+	cm := getConmaker()
+
+	err := cm.DeleteStation("doesnotexist")
+
+	//Check that there is an error
+	if err == nil {
 		t.Fail()
 	}
 }

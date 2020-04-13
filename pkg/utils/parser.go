@@ -18,7 +18,6 @@ package utils
 
 import (
 	"io/ioutil"
-	"log"
 
 	"gopkg.in/yaml.v2"
 
@@ -32,7 +31,6 @@ func ConmakefileFromFile(path string) (*v1.Conmakefile, error) {
 	f, err := ioutil.ReadFile(path)
 
 	if err != nil {
-		log.Fatal("Conmakefile not found")
 		return nil, err
 	}
 
