@@ -17,11 +17,9 @@ steps:
 workstations:
   building:
     base: gcc:latest
-    autoinit: true
     preparation:
       - touch /test
   running:
     base: ubuntu:18.04
-    autoinit: true
     preparation:
 ...

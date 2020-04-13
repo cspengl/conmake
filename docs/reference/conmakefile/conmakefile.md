@@ -19,7 +19,6 @@ steps:
 workstations:
   <workstation1>:
     base: <base image>
-    autoinit: true
     preparation:
       - <list of commands>
       - #...
@@ -45,7 +44,6 @@ steps:
 workstations:
   building:
     base: gcc:latest
-    autoinit: true
     preparation:
 ...
 ```
