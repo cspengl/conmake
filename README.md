@@ -5,7 +5,15 @@
 
 # conmake
 
-Hey!Thank you for visiting the repository of **conmake**! conmake is a kind of build tool similar to the well known [GNU Make](https://www.gnu.org/software/make/). But instead of running the commands of a 'target' directly on the host machine the commands defined by a *step* are executed inside a container. Therefore the tool is named **'conmake'** as a combination of **'container'** and **'make'**. To define the build steps **conmake** uses a kind of Makefile called 'Conmakefile' in a YAML format. Beside the build steps you can define so called workstations which define basically the build environment. A good analogy for these workstations are different tools like a circular saw or a vise on a working bench.
+---
+## TL;DR
+
+**conmake** is a 'build tool' similar to [GNU Make](https://www.gnu.org/software/make/) which runs 'targets' inside containers. If you are interested just [get it](#Installation) and [try it](#Getting-started).
+
+---
+
+
+Hey! Thank you for visiting the repository of **conmake**! conmake is a kind of build tool similar to the well known [GNU Make](https://www.gnu.org/software/make/). But instead of running the commands of a 'target' directly on the host machine the commands defined by a *step* are executed inside a container. Therefore the tool is named **'conmake'** as a combination of **'container'** and **'make'**. To define the build steps **conmake** uses a kind of Makefile called 'Conmakefile' in a YAML format. Beside the build steps you can define so called workstations which define basically the build environment. A good analogy for these workstations are different tools like a circular saw or a vise on a working bench.
 
 ... Ok, but why?
 
@@ -100,8 +108,6 @@ I am happy about any kind of feedback, feature or improvement ideas you have. If
   1. Fork the project
   2. Implement your ideas/changes
   3. Create a pull request to the `develop` branch of this repository
-
-**I would also be happy if you use the project board!**
 
 #### Tools
 
