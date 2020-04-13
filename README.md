@@ -85,7 +85,6 @@ steps:
 workstations:
   building:
     base: gcc:latest
-    autoinit: true
     preparation:
 ...
 ```
