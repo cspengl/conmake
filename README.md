@@ -8,7 +8,7 @@
 ---
 ## TL;DR
 
-**conmake** is a 'build tool' similar to [GNU Make](https://www.gnu.org/software/make/) which runs 'targets' inside containers. If you are interested just [get it](#Installation) and [try it](#Getting-started).
+**conmake** is a 'build tool' similar to [GNU Make](https://www.gnu.org/software/make/) which runs 'targets' inside containers. If you are interested just [get it](#Installation) and [try it](#Getting-started). (To use conmake with the default container agent (docker) you need a working docker installation on your machine.)
 
 ---
 
