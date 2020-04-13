@@ -6,6 +6,7 @@ steps:
   build:
     workstation: building
     script:
+      - ls -al /
       - gcc -static -o testapp testapp.c
   run:
     workstation: running
@@ -18,6 +19,7 @@ workstations:
     base: gcc:latest
     autoinit: true
     preparation:
+      - touch /test
   running:
     base: ubuntu:18.04
     autoinit: true

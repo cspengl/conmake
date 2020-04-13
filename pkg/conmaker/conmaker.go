@@ -19,21 +19,35 @@ package conmaker
 
 import (
 	"errors"
-	"log"
+	"bytes"
+	"fmt"
+	"io"
 
 	"github.com/cspengl/conmake/api/v1"
 	"github.com/cspengl/conmake/pkg/agent"
+
+	ocispec "github.com/opencontainers/runtime-spec/specs-go"
+
+	"github.com/tj/go-spin"
 )
 
-//Conmaker models the conmaker based on an agent to use, a conmakefile and
-//the project path.
+const (
+	//CONMAKEREF defines the conmake station image reference
+	CONMAKEREF 	= "conmake"
+
+	//WORKDIR defines the conmake working directory in the station container
+	WORKDIR 	= "/workspace/"
+)
+
+// Conmaker models the conmaker based on an agent to use, a conmakefile and
+// the project path.
 type Conmaker struct {
 	agent       agent.Agent
 	conmakefile *v1.Conmakefile
 	projectpath string
 }
 
-//NewConmaker returns an instance of Conmaker based on existing agent and conmakefile
+// NewConmaker returns an instance of Conmaker based on existing agent and conmakefile
 func NewConmaker(a agent.Agent, c *v1.Conmakefile, p string) *Conmaker {
 
 	return &Conmaker{
@@ -43,135 +57,271 @@ func NewConmaker(a agent.Agent, c *v1.Conmakefile, p string) *Conmaker {
 	}
 }
 
-//Perform performs a step of the Conmakefile associated to the Conmaker with the
-//associated agent.
-func (c *Conmaker) Perform(step string) error {
+// Public functions
 
-	//Check if used step is in conmakefile
-	if _, ok := c.conmakefile.Steps[step]; !ok {
-		log.Fatalf("Step %s not found in conmakefile", step)
-		return errors.New("Step not found!")
+// PerformStep performs a step specified in a Conmakefile
+func (cm *Conmaker) PerformStep(step string) (error) {
+	
+	//Validate step
+	valid := cm.validateStep(step)
+
+	if !valid {
+		return errors.New("Step not found")
 	}
 
-	imageName, err := c.InitStation(c.conmakefile.Steps[step].Workstation)
+	//Retrieving step definition
+	stepdef := cm.conmakefile.Steps[step]
+
+	//Defining station image id
+	stationImageID := constructStationImageID(cm.conmakefile.Project, stepdef.Workstation)
+	
+	//Check if station is initialized
+	stationPresent, err := cm.agent.ImagePresent(stationImageID)
+
+	if err != nil {
+		return err
+	}
+	
+	//If station not present init station
+	if !stationPresent {
+		err := cm.InitStation(stepdef.Workstation)
+
+		if err != nil {
+			return err
+		}
+	}
+
+	//Construct containerID
+	containerID := constructStationContainerID(
+		cm.conmakefile.Project, stepdef.Workstation)
+
+	//Create station config
+	config := agent.StationConfig{
+		ContainerID:	containerID,
+		ImageID:		stationImageID,
+		Mounts:			[]ocispec.Mount{ocispec.Mount{
+			Destination: 	WORKDIR,
+			Type:			"bind",
+			Source:			cm.projectpath,
+			Options:		[]string{"rw", "rbind"},
+		}},
+		Process:		ocispec.Process{
+			Terminal:	true,
+			Cwd:		WORKDIR,
+			User:		ocispec.User{
+				UID:	1,
+				GID:	1,
+			},
+			Args:		cm.generateArgs(stepdef.Script),
+		},	
+	}
+
+	//Run station to perform step
+	err = cm.runStation(config, false)
 
 	if err != nil {
 		return err
 	}
 
-	config := &agent.StationConfig{
-		ProjectName: c.conmakefile.Project,
-		StationName: step,
-		Image:       imageName,
-		Script:      c.conmakefile.Steps[step].Script,
-		Workspace:   c.projectpath,
-	}
-
-	return c.agent.PerformStep(config)
+	//Destroy station
+	return cm.agent.DestroyStationContainer(containerID)
 }
 
-//InitStation initializes a workstation of the Conmakefile associated
-//to the Conmaker with the associated agent.
-func (c *Conmaker) InitStation(station string) (string, error) {
+// InitStation initializes station and leaves a new image stored in the
+// underlying image store
+func (cm *Conmaker) InitStation(station string) (error) {
 
-	err := c.validateStation(station)
+	//Validate station
+	valid := cm.validateStation(station)
+
+	if !valid {
+		return errors.New("Station not found")
+	}
+
+	//Retrieve Station definition
+	stationdef 	:= cm.conmakefile.Workstations[station]
+	containerID	:= constructStationContainerID(
+		cm.conmakefile.Project, station)
+	imageID 	:= constructStationImageID(
+		cm.conmakefile.Project, station)
+
+	//Check if there is an existing station
+	oldStationPresent, err := cm.agent.ImagePresent(imageID)
+
+	//Deleting old station
+	if oldStationPresent {
+		err = cm.DeleteStation(station)
+	}
+
+	//Construct station config
+	config := agent.StationConfig{
+		ContainerID:	containerID,
+		ImageID:		stationdef.Base,
+		Mounts:			[]ocispec.Mount{},
+		Process:		ocispec.Process{
+			Terminal:	true,
+			Cwd:		WORKDIR,
+			User:		ocispec.User{
+				UID:	1000,
+				GID:	1000,
+			},
+			Args:		cm.generateArgs(stationdef.Script),
+		},	
+	}
+
+	//Run initialization script
+	err = cm.runStation(config, false)
 
 	if err != nil {
-		return "", err
+		return err
 	}
 
-	config := &agent.StationConfig{
-		ProjectName: c.conmakefile.Project,
-		StationName: station,
-		Image: agent.ConstructStationImageNameFromRaw(
-			c.conmakefile.Project,
-			station,
-		),
-		Script:    c.conmakefile.Workstations[station].Script,
-		Workspace: c.projectpath,
-	}
-
-	stationExists, err := c.agent.StationExists(config)
-
+	//Save container state to new image
+	err = cm.agent.SaveStationContainer(containerID, imageID)
+		
 	if err != nil {
-		return "", err
+		return err
 	}
 
-	if !stationExists {
-		log.Println("Station not found, initializing from base...")
-		config.Image = c.conmakefile.Workstations[station].Base
-	}
-
-	return c.agent.InitStation(config, stationExists)
+	//Destroy station container
+	return cm.agent.DestroyStationContainer(containerID)
 }
 
-//DeleteStation deletes a workstation of the Conmakefile associated to the Conmaker
-//with the associated agent.
-func (c *Conmaker) DeleteStation(station string) error {
+// DeleteStation deletes a workstation of the Conmakefile associated to the Conmaker
+// with the associated agent.
+func (cm *Conmaker) DeleteStation(station string) (error) {
 
-	err := c.validateStation(station)
+	valid := cm.validateStation(station)
 
-	if err != nil {
-		return err
+	if !valid {
+		return errors.New("Station Not Found")
 	}
 
-	config := &agent.StationConfig{
-		ProjectName: c.conmakefile.Project,
-		StationName: station,
-		Image: agent.ConstructStationImageNameFromRaw(
-			c.conmakefile.Project,
-			station,
-		),
-		Script:    c.conmakefile.Workstations[station].Script,
-		Workspace: c.projectpath,
-	}
-
-	return c.agent.DeleteStation(config)
+	return cm.agent.DeleteImage(constructStationImageID(
+		cm.conmakefile.Project, station))
 }
 
-//CleanStation cleans a workstation of the Conmakefile associated to the Conmaker
-//with the associated agent. This basically deletes the existing one and
-//initializes a new one from the given base image.
-func (c *Conmaker) CleanStation(station string) error {
+//StationList is currently not implemented and returns nothing
+func (cm *Conmaker) StationList() (error) {
+	return nil
+}
 
-	err := c.validateStation(station)
+// Private functions
 
-	if err != nil {
-		return err
-	}
-
-	config := &agent.StationConfig{
-		ProjectName: c.conmakefile.Project,
-		StationName: station,
-		Image: agent.ConstructStationImageNameFromRaw(
-			c.conmakefile.Project,
-			station,
-		),
-		Script:    c.conmakefile.Workstations[station].Script,
-		Workspace: c.projectpath,
-	}
-
-	err = c.agent.DeleteStation(config)
+func (cm *Conmaker) runStation(config agent.StationConfig, quiet bool) (error) {
+	
+	//Preparing station
+	err := cm.prepareStation(config)
 
 	if err != nil {
 		return err
 	}
 
-	config.Image = c.conmakefile.Workstations[station].Base
+	//Creating station container
+	err = cm.agent.CreateStationContainer(config)
 
-	_, err = c.InitStation(station)
+	if err != nil {
+		return err
+	}
+
+	//Running the station container
+	output, err := cm.agent.RunStationContainer(config.ContainerID, quiet)
+
+	if err != nil {
+		return err
+	}
+
+	//Printing output to console
+	buf := new(bytes.Buffer)
+	buf.ReadFrom(output)
+	fmt.Print(buf.String())
 
 	return err
 }
 
-func (c *Conmaker) StationList() error {
-	return c.agent.StationList(c.conmakefile.Project)
+func (cm *Conmaker) prepareStation(config agent.StationConfig) (error) {
+	
+	imagePresent, err := cm.agent.ImagePresent(config.ImageID)
+
+	if err != nil {
+		return err
+	}
+
+	if !imagePresent {
+
+		progress, err := cm.agent.DownloadImage(config.ImageID)
+
+		if err != nil {
+			return err
+		}
+
+		progressBuffer := make([]byte, 32*2048)
+		downloadSpinner := spin.New()
+		for {
+			_, downloadErr := progress.Read(progressBuffer)
+			if downloadErr != nil {
+				if downloadErr == io.EOF {
+					break
+				}
+			}
+			fmt.Printf("\rDownloading image %s", downloadSpinner.Next())
+		}
+
+		//clearing console
+		fmt.Println("")
+		defer progress.Close()
+	}
+
+	return err
 }
 
-func (c *Conmaker) validateStation(station string) error {
-	if _, ok := c.conmakefile.Workstations[station]; !ok {
-		log.Fatalf("Station %s not found in conmakefile", station)
-		return errors.New("Station not found!")
+func (cm *Conmaker) validateStep(step string) (bool) {
+	if _, ok := cm.conmakefile.Steps[step]; !ok {
+		return false
 	}
+	return true
+}
+
+func (cm *Conmaker) validateStation(station string) (bool) {
+	if _, ok := cm.conmakefile.Workstations[station]; !ok {
+		return false
+	}
+	return true
+}
+
+func (cm *Conmaker) generateArgs(script []string) ([]string) {
+
+	if len(script) != 0 {
+
+		//Creating new shell
+		args := []string{"sh", "-c"}
+
+		//oneLineScript
+		oneLineScript := ""
+
+		//Appending commands
+		for _, command := range script {
+			oneLineScript = oneLineScript + command
+			oneLineScript = oneLineScript + ";"
+		}
+
+		oneLineScript = oneLineScript[:len(oneLineScript)-1]
+
+		args = append(args, oneLineScript)
+
+		return args
+	}
+
 	return nil
 }
+
+// Static functions
+
+func constructStationContainerID(project, station string) (string) {
+	return project + "-" + station
+}
+
+func constructStationImageID(project, station string) (string) {
+	return project + "/" + station + ":" + CONMAKEREF
+}
+

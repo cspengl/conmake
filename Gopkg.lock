@@ -50,6 +50,12 @@
   version = "v1.0.0-rc1"
 
 [[projects]]
+  name = "github.com/opencontainers/runtime-spec"
+  packages = ["specs-go"]
+  revision = "c4ee7d12c742ffe806cd9350b6af3b4b19faed6f"
+  version = "v1.0.2"
+
+[[projects]]
   name = "github.com/pkg/errors"
   packages = ["."]
   revision = "ba968bfe8b2f7e042a574c888954fccecfa385b4"
@@ -100,6 +106,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "2fc7fd1c5fd80f280f459485fefff6e64faf2f07a288a4e55750f7790bfecc2e"
+  inputs-digest = "d5172611e8d9b84035a46fc7f79a90f4f506fc234124bbc57158c54d61a1fbae"
   solver-name = "gps-cdcl"
   solver-version = 1

@@ -17,10 +17,8 @@ limitations under the License.
 package docker
 
 import (
-	"bytes"
-	"fmt"
+	"errors"
 	"io"
-	"strings"
 
 	"github.com/cspengl/conmake/pkg/agent"
 
@@ -30,8 +28,6 @@ import (
 	"github.com/docker/docker/client"
 
 	"golang.org/x/net/context"
-
-	"github.com/tj/go-spin"
 )
 
 //DockerAgent models the docker agent and contains the docker client and
@@ -87,210 +83,123 @@ func NewDockerAgentFromEnv() (*DockerAgent, error) {
 		client:     cli,
 	}, err
 }
+// CreateStationContainer creates a new container
+// on the docker runtime based on a station config
+func (a *DockerAgent) CreateStationContainer(config agent.StationConfig) (error) {
 
-//Info implements information function of the docker agent printing
-//the endpoint and the used API version
-func (a *DockerAgent) Info() {
-	fmt.Printf("Host: %v, Apiversion: %v\n", a.endpoint, a.apiversion)
-}
-
-func (a *DockerAgent) spinUpStation(config *agent.StationConfig) (string, error) {
-
-	//Check if image exists
-	imageExists, err := a.imageExists(config.Image)
-
-	if err != nil {
-		return "", err
+	//Preparing container config
+	containerConfig := &container.Config{
+		AttachStdout:true,
+		Image:		config.ImageID,
+		Tty:		config.Process.Terminal,
+		Cmd:		config.Process.Args,
+		WorkingDir: config.Process.Cwd,
 	}
 
-	//If image not present agent tries to download it
-	if !imageExists {
-		err = a.downloadImage(config.Image)
+	//Preparing mounts
+	var mounts = []mount.Mount{}
+	for _, ociMount := range config.Mounts {
+		mounts = append(mounts, mount.Mount{
+			Type:	mount.Type(ociMount.Type),
+			Source:	ociMount.Source,
+			Target: ociMount.Destination,
+		})
 	}
 
-	if err != nil {
-		return "", err
+	//Prepareing hostConfig
+	hostConfig := &container.HostConfig{
+		Mounts: mounts,
 	}
 
-	//Command
-	cmd := []string{
-		"sh",
-		"-c",
-		agent.GenShellScript(config.Script),
-	}
-
-	//Creating container from image
-	resp, err := a.client.ContainerCreate(
+	//Create the container
+	_, err := a.client.ContainerCreate(
 		a.ctx,
-		&container.Config{
-			User:       "1000:1000",
-			Image:      config.Image,
-			Tty:        true,
-			Cmd:        cmd,
-			WorkingDir: agent.Workspace,
-		},
-		&container.HostConfig{
-			Mounts: []mount.Mount{
-				{
-					Type:   mount.TypeBind,
-					Source: config.Workspace,
-					Target: agent.Workspace,
-				},
-			},
-		},
+		containerConfig,
+		hostConfig,
 		nil,
-		agent.ConstructStationContainerName(config),
+		config.ContainerID,
 	)
 
+	return err
+}
+
+// RunStationContainer runs an existing station container
+// by a given container id. If the quiet flag is false it will
+// return a io.ReadCloser for reading the containers outputs.
+func (a *DockerAgent) RunStationContainer(containerID string, quiet bool) (io.ReadCloser, error) {
+	
+	//Find docker id
+	dockerID, err := a.findDockerID(containerID)
+
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 
-	//Start created container
+	//Start container by id
 	err = a.client.ContainerStart(
 		a.ctx,
-		resp.ID,
+		dockerID,
 		types.ContainerStartOptions{},
 	)
 
-	return resp.ID, err
+	if err != nil {
+		return nil, err
+	}
+
+	if !quiet {
+		return a.client.ContainerLogs(
+			a.ctx,
+			dockerID,
+			types.ContainerLogsOptions{
+				ShowStderr: true,
+				ShowStdout: true,
+				Follow:		true,
+			},
+		)
+	} 
+	
+	return nil, err
 }
 
-//InitStation implements the Init function for stations in it's role of a conmake agent.
-func (a *DockerAgent) InitStation(config *agent.StationConfig, existing bool) (string, error) {
+// DestroyStationContainer deletes an existing station container by a
+// given id
+func (a *DockerAgent) DestroyStationContainer(containerID string) (error) {
 
-	//Creating image name
-	imageName := agent.ConstructStationImageName(config)
-
-	//Spinup station
-	stationContainerID, err := a.spinUpStation(config)
+	//Find docker id
+	dockerID, err := a.findDockerID(containerID)
 
 	if err != nil {
-		return "", err
+		return err
 	}
 
-	//Delete old station
-	if existing {
-		err = a.DeleteStation(config)
-	}
-
-	if err != nil {
-		return "", err
-	}
-
-	//Committing station as new image
-	_, err = a.client.ContainerCommit(
+	//Remove container by id
+	return a.client.ContainerRemove(
 		a.ctx,
-		agent.ConstructStationContainerName(config),
+		dockerID,
+		types.ContainerRemoveOptions{
+			Force: true,
+		},
+	)
+}
+
+// SaveStationContainer commits an existing station container specified
+// by a containerID to a new image specified by ImageID
+func (a *DockerAgent) SaveStationContainer(containerID, imageID string) (error) {
+
+	_, err := a.client.ContainerCommit(
+		a.ctx,
+		containerID,
 		types.ContainerCommitOptions{
-			Reference: imagePrefix + "/" + imageName,
-		},
-	)
-
-	if err != nil {
-		return "", err
-	}
-
-	//Remove running station container
-	err = a.client.ContainerRemove(
-		a.ctx,
-		stationContainerID,
-		types.ContainerRemoveOptions{
-			Force: true,
-		},
-	)
-
-	return imageName, err
-}
-
-//DeleteStation implements the Delete function for stations in it's role of a conmake agent.
-func (a *DockerAgent) DeleteStation(config *agent.StationConfig) error {
-	_, err := a.client.ImageRemove(
-		a.ctx,
-		config.Image,
-		types.ImageRemoveOptions{
-			Force:         true,
-			PruneChildren: true,
+			Reference: imagePrefix + "/" + imageID,
 		},
 	)
 
 	return err
 }
 
-//PerformStep implements the function for performing steps on stations in it's role of a
-//conmake agent.
-func (a *DockerAgent) PerformStep(config *agent.StationConfig) error {
-
-	//Spin up station
-	stationContainerID, err := a.spinUpStation(config)
-
-	if err != nil {
-		return err
-	}
-
-	//Attaching to container logs
-	out, err := a.client.ContainerLogs(
-		a.ctx,
-		stationContainerID,
-		types.ContainerLogsOptions{
-			ShowStderr: true,
-			ShowStdout: true,
-			Timestamps: true,
-			Follow:     true,
-			Tail:       "40",
-		},
-	)
-
-	buf := new(bytes.Buffer)
-	buf.ReadFrom(out)
-	fmt.Printf(buf.String())
-
-	if err != nil {
-		return err
-	}
-
-	//Remove running station container after shell script runned
-	err = a.client.ContainerRemove(
-		a.ctx,
-		stationContainerID,
-		types.ContainerRemoveOptions{
-			Force: true,
-		},
-	)
-
-	return err
-}
-
-//StationExists check if a given station has been initialized once.
-func (a *DockerAgent) StationExists(config *agent.StationConfig) (bool, error) {
-	return a.imageExists(agent.ConstructStationImageName(config))
-}
-
-//StationList prints a list of stations
-func (a *DockerAgent) StationList(projectname string) error {
-	images, err := a.client.ImageList(
-		a.ctx,
-		types.ImageListOptions{
-			All: true,
-		},
-	)
-
-	if err != nil {
-		return err
-	}
-
-	for _, img := range images {
-		for _, tag := range img.RepoTags {
-			if strings.Contains(tag, projectname) {
-				fmt.Printf("%v\n", img.RepoTags)
-			}
-		}
-	}
-
-	return err
-}
-
-func (a *DockerAgent) imageExists(imageTag string) (bool, error) {
+// ImagePresent checks if an image is present in the underlying image store
+// (local docker imagedb) and returns true if yes (false if not).
+func (a *DockerAgent) ImagePresent(imageID string) (bool, error) {
 
 	images, err := a.client.ImageList(
 		a.ctx,
@@ -305,37 +214,62 @@ func (a *DockerAgent) imageExists(imageTag string) (bool, error) {
 
 	for _, img := range images {
 		for _, tag := range img.RepoTags {
-			if tag == imageTag {
-				return true, err
+			if tag == imageID {
+				return true, nil
 			}
 		}
 	}
+
 	return false, err
 }
 
-func (a *DockerAgent) downloadImage(image string) error {
-
-	reader, err := a.client.ImagePull(
+// DownloadImage downloads an image from the official Docker Registry
+func (a *DockerAgent) DownloadImage(imageID string) (io.ReadCloser, error) {
+	return a.client.ImagePull(
 		a.ctx,
-		imagePrefix+"/library/"+image,
+		imagePrefix+"/library/"+imageID,
 		types.ImagePullOptions{},
 	)
+}
 
-	buf := make([]byte, 32*2048)
-	spinner := spin.New()
-	for {
-		_, er := reader.Read(buf)
-		if er != nil {
-			if er == io.EOF {
-				break
-			}
-		}
-
-		fmt.Printf("\rDownloading image %s ", spinner.Next())
-	}
-
-	fmt.Println("")
-	defer reader.Close()
+// DeleteImage deletes an image specified by a imageID
+func (a *DockerAgent) DeleteImage(imageID string) (error) {
+	_, err := a.client.ImageRemove(
+		a.ctx,
+		imageID,
+		types.ImageRemoveOptions{
+			Force:			true,
+			PruneChildren: 	true,
+		},
+	)
 
 	return err
+}
+
+
+// Private functions
+
+func (a *DockerAgent) findDockerID(containerName string) (string, error) {
+
+	//Find containerid (container name)
+	containers, err := a.client.ContainerList(
+		a.ctx,
+		types.ContainerListOptions{
+			All: true,
+		},
+	)
+
+	if err != nil {
+		return "", err
+	}
+
+	for _, container := range containers {
+		for _, name := range container.Names {
+			if name == ("/" + containerName) {
+				return container.ID, nil
+			}
+		}
+	}
+
+	return "", errors.New("Container not found")
 }

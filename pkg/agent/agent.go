@@ -23,6 +23,12 @@ import (
 	ocispec "github.com/opencontainers/runtime-spec/specs-go"
 )
 
+type AgentSign string 
+
+const (
+	SIGN_DOCKER AgentSign = "docker"
+)
+
 //StationConfig models the configuration of a station to be spinned up and used
 type StationConfig struct {
 	// ContainerID is the id of the station container
@@ -36,22 +42,22 @@ type StationConfig struct {
 	Process		ocispec.Process
 	// User is the OCI user which executes the specified process
 	User		ocispec.User
-	// Output is a ReadCloser for processing the output of the process (standard output)
-	Output		io.ReadCloser
 }
 
 // Agent defines a generic interface for working with
-// station containers on a OCI runtime
+// station containers on an OCI runtime
 type Agent interface {
 	// ImagePresent returns if an image specific by imageID exists.
 	ImagePresent(imageID string) (bool, error)
 	// DownloadImage downloads an image specified by imageID and returns
 	// a io.ReadCloser for processing the download (e.g. progress)
-	DownloadImage(imageID string) (io.ReadCloser, string)
+	DownloadImage(imageID string) (io.ReadCloser, error)
+	// DeleteImage deletes an image from the image store by a given id
+	DeleteImage(imageID string) (error)
 	// CreateStationContainer creates a container based on a StationConfig.
 	CreateStationContainer(config StationConfig) (error)
 	// RunStationContainer runs a created station container specified by a containerID
-	RunStationContainer(containerID string) (error)
+	RunStationContainer(containerID string, quiet bool) (io.ReadCloser, error)
 	// DestroyStationContainer destroys a station container specified by a containerID
 	DestroyStationContainer(containerID string) (error)
 	// SaveStationContainer saves a stopped station container specified by 

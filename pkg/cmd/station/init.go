@@ -39,7 +39,7 @@ func initStation(stationName string) {
 		panic(err)
 	}
 
-	_, err = cm.InitStation(stationName)
+	err = cm.InitStation(stationName)
 
 	if err != nil {
 		panic(err)

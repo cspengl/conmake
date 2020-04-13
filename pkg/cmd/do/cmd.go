@@ -39,7 +39,7 @@ func run(args []string) {
 		panic(err)
 	}
 
-	err = cm.Perform(args[0])
+	err = cm.PerformStep(args[0])
 
 	if err != nil {
 		panic(err)
