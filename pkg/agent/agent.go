@@ -23,9 +23,11 @@ import (
 	ocispec "github.com/opencontainers/runtime-spec/specs-go"
 )
 
-type AgentSign string 
+// AgentSign is a type for defining different underlying agents
+type AgentSign string
 
 const (
+	// SIGN_DOCKER is the AgentSign for the docker agent
 	SIGN_DOCKER AgentSign = "docker"
 )
 
@@ -33,15 +35,15 @@ const (
 type StationConfig struct {
 	// ContainerID is the id of the station container
 	ContainerID string
-	// ImageID is the id of the image for the station to use 
+	// ImageID is the id of the image for the station to use
 	// (either base or existing station image)
-	ImageID 	string
+	ImageID string
 	// Mounts are OCI Mounts for the station container (workspace mount)
-	Mounts		[]ocispec.Mount
+	Mounts []ocispec.Mount
 	// Process is the OCI process to execute on the staton container
-	Process		ocispec.Process
+	Process ocispec.Process
 	// User is the OCI user which executes the specified process
-	User		ocispec.User
+	User ocispec.User
 }
 
 // Agent defines a generic interface for working with
@@ -53,14 +55,14 @@ type Agent interface {
 	// a io.ReadCloser for processing the download (e.g. progress)
 	DownloadImage(imageID string) (io.ReadCloser, error)
 	// DeleteImage deletes an image from the image store by a given id
-	DeleteImage(imageID string) (error)
+	DeleteImage(imageID string) error
 	// CreateStationContainer creates a container based on a StationConfig.
-	CreateStationContainer(config StationConfig) (error)
+	CreateStationContainer(config StationConfig) error
 	// RunStationContainer runs a created station container specified by a containerID
 	RunStationContainer(containerID string, quiet bool) (io.ReadCloser, error)
 	// DestroyStationContainer destroys a station container specified by a containerID
-	DestroyStationContainer(containerID string) (error)
-	// SaveStationContainer saves a stopped station container specified by 
-	// a containerID as a new image with the given imageID 
-	SaveStationContainer(containerID, imageID string) (error)
+	DestroyStationContainer(containerID string) error
+	// SaveStationContainer saves a stopped station container specified by
+	// a containerID as a new image with the given imageID
+	SaveStationContainer(containerID, imageID string) error
 }

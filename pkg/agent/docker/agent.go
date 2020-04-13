@@ -83,25 +83,26 @@ func NewDockerAgentFromEnv() (*DockerAgent, error) {
 		client:     cli,
 	}, err
 }
+
 // CreateStationContainer creates a new container
 // on the docker runtime based on a station config
-func (a *DockerAgent) CreateStationContainer(config agent.StationConfig) (error) {
+func (a *DockerAgent) CreateStationContainer(config agent.StationConfig) error {
 
 	//Preparing container config
 	containerConfig := &container.Config{
-		AttachStdout:true,
-		Image:		config.ImageID,
-		Tty:		config.Process.Terminal,
-		Cmd:		config.Process.Args,
-		WorkingDir: config.Process.Cwd,
+		AttachStdout: true,
+		Image:        config.ImageID,
+		Tty:          config.Process.Terminal,
+		Cmd:          config.Process.Args,
+		WorkingDir:   config.Process.Cwd,
 	}
 
 	//Preparing mounts
 	var mounts = []mount.Mount{}
 	for _, ociMount := range config.Mounts {
 		mounts = append(mounts, mount.Mount{
-			Type:	mount.Type(ociMount.Type),
-			Source:	ociMount.Source,
+			Type:   mount.Type(ociMount.Type),
+			Source: ociMount.Source,
 			Target: ociMount.Destination,
 		})
 	}
@@ -127,7 +128,7 @@ func (a *DockerAgent) CreateStationContainer(config agent.StationConfig) (error)
 // by a given container id. If the quiet flag is false it will
 // return a io.ReadCloser for reading the containers outputs.
 func (a *DockerAgent) RunStationContainer(containerID string, quiet bool) (io.ReadCloser, error) {
-	
+
 	//Find docker id
 	dockerID, err := a.findDockerID(containerID)
 
@@ -153,17 +154,17 @@ func (a *DockerAgent) RunStationContainer(containerID string, quiet bool) (io.Re
 			types.ContainerLogsOptions{
 				ShowStderr: true,
 				ShowStdout: true,
-				Follow:		true,
+				Follow:     true,
 			},
 		)
-	} 
-	
+	}
+
 	return nil, err
 }
 
 // DestroyStationContainer deletes an existing station container by a
 // given id
-func (a *DockerAgent) DestroyStationContainer(containerID string) (error) {
+func (a *DockerAgent) DestroyStationContainer(containerID string) error {
 
 	//Find docker id
 	dockerID, err := a.findDockerID(containerID)
@@ -184,7 +185,7 @@ func (a *DockerAgent) DestroyStationContainer(containerID string) (error) {
 
 // SaveStationContainer commits an existing station container specified
 // by a containerID to a new image specified by ImageID
-func (a *DockerAgent) SaveStationContainer(containerID, imageID string) (error) {
+func (a *DockerAgent) SaveStationContainer(containerID, imageID string) error {
 
 	_, err := a.client.ContainerCommit(
 		a.ctx,
@@ -233,19 +234,18 @@ func (a *DockerAgent) DownloadImage(imageID string) (io.ReadCloser, error) {
 }
 
 // DeleteImage deletes an image specified by a imageID
-func (a *DockerAgent) DeleteImage(imageID string) (error) {
+func (a *DockerAgent) DeleteImage(imageID string) error {
 	_, err := a.client.ImageRemove(
 		a.ctx,
 		imageID,
 		types.ImageRemoveOptions{
-			Force:			true,
-			PruneChildren: 	true,
+			Force:         true,
+			PruneChildren: true,
 		},
 	)
 
 	return err
 }
-
 
 // Private functions
 

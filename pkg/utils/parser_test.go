@@ -17,23 +17,22 @@ limitations under the License.
 package utils_test
 
 import (
-	"testing"
-	"os"
 	"io/ioutil"
+	"os"
+	"testing"
 
 	"github.com/cspengl/conmake/pkg/utils"
 )
 
 const filePath = "/../../testdata/Conmakefile.yaml"
 
-func getPath() (string) {
+func getPath() string {
 	pwd, _ := os.Getwd()
 	return pwd + filePath
 }
 
-
 func TestConmakeFileFromFile(t *testing.T) {
-	
+
 	_, err := utils.ConmakefileFromFile(getPath())
 	if err != nil {
 		t.Fail()
@@ -52,6 +51,3 @@ func TestConmakefileFromByte(t *testing.T) {
 		}
 	}
 }
-
-
-

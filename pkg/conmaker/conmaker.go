@@ -14,12 +14,12 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-//Package conmaker is the main package for conmake
+// Package conmaker is the main package for conmake
 package conmaker
 
 import (
-	"errors"
 	"bytes"
+	"errors"
 	"fmt"
 	"io"
 
@@ -33,10 +33,10 @@ import (
 
 const (
 	//CONMAKEREF defines the conmake station image reference
-	CONMAKEREF 	= "conmake"
+	CONMAKEREF = "conmake"
 
 	//WORKDIR defines the conmake working directory in the station container
-	WORKDIR 	= "/workspace/"
+	WORKDIR = "/workspace/"
 )
 
 // Conmaker models the conmaker based on an agent to use, a conmakefile and
@@ -60,8 +60,8 @@ func NewConmaker(a agent.Agent, c *v1.Conmakefile, p string) *Conmaker {
 // Public functions
 
 // PerformStep performs a step specified in a Conmakefile
-func (cm *Conmaker) PerformStep(step string) (error) {
-	
+func (cm *Conmaker) PerformStep(step string) error {
+
 	//Validate step
 	valid := cm.validateStep(step)
 
@@ -74,14 +74,14 @@ func (cm *Conmaker) PerformStep(step string) (error) {
 
 	//Defining station image id
 	stationImageID := constructStationImageID(cm.conmakefile.Project, stepdef.Workstation)
-	
+
 	//Check if station is initialized
 	stationPresent, err := cm.agent.ImagePresent(stationImageID)
 
 	if err != nil {
 		return err
 	}
-	
+
 	//If station not present init station
 	if !stationPresent {
 		err := cm.InitStation(stepdef.Workstation)
@@ -97,23 +97,23 @@ func (cm *Conmaker) PerformStep(step string) (error) {
 
 	//Create station config
 	config := agent.StationConfig{
-		ContainerID:	containerID,
-		ImageID:		stationImageID,
-		Mounts:			[]ocispec.Mount{ocispec.Mount{
-			Destination: 	WORKDIR,
-			Type:			"bind",
-			Source:			cm.projectpath,
-			Options:		[]string{"rw", "rbind"},
+		ContainerID: containerID,
+		ImageID:     stationImageID,
+		Mounts: []ocispec.Mount{{
+			Destination: WORKDIR,
+			Type:        "bind",
+			Source:      cm.projectpath,
+			Options:     []string{"rw", "rbind"},
 		}},
-		Process:		ocispec.Process{
-			Terminal:	true,
-			Cwd:		WORKDIR,
-			User:		ocispec.User{
-				UID:	1,
-				GID:	1,
+		Process: ocispec.Process{
+			Terminal: true,
+			Cwd:      WORKDIR,
+			User: ocispec.User{
+				UID: 1,
+				GID: 1,
 			},
-			Args:		cm.generateArgs(stepdef.Script),
-		},	
+			Args: cm.generateArgs(stepdef.Script),
+		},
 	}
 
 	//Run station to perform step
@@ -129,7 +129,7 @@ func (cm *Conmaker) PerformStep(step string) (error) {
 
 // InitStation initializes station and leaves a new image stored in the
 // underlying image store
-func (cm *Conmaker) InitStation(station string) (error) {
+func (cm *Conmaker) InitStation(station string) error {
 
 	//Validate station
 	valid := cm.validateStation(station)
@@ -139,34 +139,42 @@ func (cm *Conmaker) InitStation(station string) (error) {
 	}
 
 	//Retrieve Station definition
-	stationdef 	:= cm.conmakefile.Workstations[station]
-	containerID	:= constructStationContainerID(
+	stationdef := cm.conmakefile.Workstations[station]
+	containerID := constructStationContainerID(
 		cm.conmakefile.Project, station)
-	imageID 	:= constructStationImageID(
+	imageID := constructStationImageID(
 		cm.conmakefile.Project, station)
 
 	//Check if there is an existing station
 	oldStationPresent, err := cm.agent.ImagePresent(imageID)
 
+	if err != nil {
+		return err
+	}
+
 	//Deleting old station
 	if oldStationPresent {
 		err = cm.DeleteStation(station)
+
+		if err != nil {
+			return err
+		}
 	}
 
 	//Construct station config
 	config := agent.StationConfig{
-		ContainerID:	containerID,
-		ImageID:		stationdef.Base,
-		Mounts:			[]ocispec.Mount{},
-		Process:		ocispec.Process{
-			Terminal:	true,
-			Cwd:		WORKDIR,
-			User:		ocispec.User{
-				UID:	1000,
-				GID:	1000,
+		ContainerID: containerID,
+		ImageID:     stationdef.Base,
+		Mounts:      []ocispec.Mount{},
+		Process: ocispec.Process{
+			Terminal: true,
+			Cwd:      WORKDIR,
+			User: ocispec.User{
+				UID: 1000,
+				GID: 1000,
 			},
-			Args:		cm.generateArgs(stationdef.Script),
-		},	
+			Args: cm.generateArgs(stationdef.Script),
+		},
 	}
 
 	//Run initialization script
@@ -178,7 +186,7 @@ func (cm *Conmaker) InitStation(station string) (error) {
 
 	//Save container state to new image
 	err = cm.agent.SaveStationContainer(containerID, imageID)
-		
+
 	if err != nil {
 		return err
 	}
@@ -189,7 +197,7 @@ func (cm *Conmaker) InitStation(station string) (error) {
 
 // DeleteStation deletes a workstation of the Conmakefile associated to the Conmaker
 // with the associated agent.
-func (cm *Conmaker) DeleteStation(station string) (error) {
+func (cm *Conmaker) DeleteStation(station string) error {
 
 	valid := cm.validateStation(station)
 
@@ -202,14 +210,14 @@ func (cm *Conmaker) DeleteStation(station string) (error) {
 }
 
 //StationList is currently not implemented and returns nothing
-func (cm *Conmaker) StationList() (error) {
+func (cm *Conmaker) StationList() error {
 	return nil
 }
 
 // Private functions
 
-func (cm *Conmaker) runStation(config agent.StationConfig, quiet bool) (error) {
-	
+func (cm *Conmaker) runStation(config agent.StationConfig, quiet bool) error {
+
 	//Preparing station
 	err := cm.prepareStation(config)
 
@@ -239,8 +247,8 @@ func (cm *Conmaker) runStation(config agent.StationConfig, quiet bool) (error) {
 	return err
 }
 
-func (cm *Conmaker) prepareStation(config agent.StationConfig) (error) {
-	
+func (cm *Conmaker) prepareStation(config agent.StationConfig) error {
+
 	imagePresent, err := cm.agent.ImagePresent(config.ImageID)
 
 	if err != nil {
@@ -275,21 +283,21 @@ func (cm *Conmaker) prepareStation(config agent.StationConfig) (error) {
 	return err
 }
 
-func (cm *Conmaker) validateStep(step string) (bool) {
+func (cm *Conmaker) validateStep(step string) bool {
 	if _, ok := cm.conmakefile.Steps[step]; !ok {
 		return false
 	}
 	return true
 }
 
-func (cm *Conmaker) validateStation(station string) (bool) {
+func (cm *Conmaker) validateStation(station string) bool {
 	if _, ok := cm.conmakefile.Workstations[station]; !ok {
 		return false
 	}
 	return true
 }
 
-func (cm *Conmaker) generateArgs(script []string) ([]string) {
+func (cm *Conmaker) generateArgs(script []string) []string {
 
 	if len(script) != 0 {
 
@@ -317,11 +325,10 @@ func (cm *Conmaker) generateArgs(script []string) ([]string) {
 
 // Static functions
 
-func constructStationContainerID(project, station string) (string) {
+func constructStationContainerID(project, station string) string {
 	return project + "-" + station
 }
 
-func constructStationImageID(project, station string) (string) {
+func constructStationImageID(project, station string) string {
 	return project + "/" + station + ":" + CONMAKEREF
 }
-

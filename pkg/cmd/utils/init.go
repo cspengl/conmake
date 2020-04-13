@@ -14,8 +14,6 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-//Package cmd is the parent package for all commands
-//Contains the root command and the version command
 package utils
 
 import (
@@ -31,6 +29,8 @@ import (
 	"github.com/cspengl/conmake/pkg/utils"
 )
 
+// ConmakerFromCmd offers the possibility to create a Conmaker object
+// from the current workind directory and command line flags
 func ConmakerFromCmd() (*conmaker.Conmaker, error) {
 
 	//Reading Conmakefile from path
@@ -58,6 +58,10 @@ func ConmakerFromCmd() (*conmaker.Conmaker, error) {
 	cmProjectpath := flags.ProjectPath
 	if cmProjectpath == "./" {
 		cmProjectpath, err = os.Getwd()
+
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	//Return conmaker

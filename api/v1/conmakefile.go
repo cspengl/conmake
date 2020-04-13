@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-////Package v1 is the package containing version 1 of the conmake API
+// Package v1 is the package containing version 1 of the conmake API
 package v1
 
 //Conmakefile models the YAML Object of a Conmakefile

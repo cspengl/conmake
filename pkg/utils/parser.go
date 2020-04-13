@@ -25,6 +25,8 @@ import (
 	"github.com/cspengl/conmake/api/v1"
 )
 
+// ConmakefileFromFile parses a Conmakefile on a given path
+// into a Conmakefile struct/object
 func ConmakefileFromFile(path string) (*v1.Conmakefile, error) {
 	//Read file
 	f, err := ioutil.ReadFile(path)
@@ -37,7 +39,7 @@ func ConmakefileFromFile(path string) (*v1.Conmakefile, error) {
 	return ConmakefileFromByte(f)
 }
 
-//FromPath parses a Conmakfile from bytes into a Conmakefile struct
+// ConmakefileFromByte parses a Conmakefile from bytes into a Conmakefile struct
 func ConmakefileFromByte(data []byte) (*v1.Conmakefile, error) {
 	c := v1.Conmakefile{}
 	err := yaml.Unmarshal(data, &c)

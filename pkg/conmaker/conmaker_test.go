@@ -20,22 +20,22 @@ import (
 	"testing"
 
 	"bytes"
-	"io/ioutil"
 	"io"
+	"io/ioutil"
 	"os"
 
+	"github.com/cspengl/conmake/pkg/agent"
 	"github.com/cspengl/conmake/pkg/conmaker"
 	"github.com/cspengl/conmake/pkg/utils"
-	"github.com/cspengl/conmake/pkg/agent"
 )
 
 //Implementing a fake agent for testing the conmaker
 
 type imageStub struct{}
 
-type agentStub struct{
-	images		map[string]imageStub
-	containers	map[string]agent.StationConfig
+type agentStub struct {
+	images     map[string]imageStub
+	containers map[string]agent.StationConfig
 }
 
 func (a *agentStub) ImagePresent(imageID string) (bool, error) {
@@ -54,14 +54,14 @@ func (a *agentStub) DownloadImage(imageID string) (io.ReadCloser, error) {
 	return progress, nil
 }
 
-func (a *agentStub) DeleteImage(imageID string) (error) {
+func (a *agentStub) DeleteImage(imageID string) error {
 	//Delete empty struct at imageID
 	delete(a.images, imageID)
 
 	return nil
 }
 
-func (a *agentStub) CreateStationContainer(config agent.StationConfig) (error) {
+func (a *agentStub) CreateStationContainer(config agent.StationConfig) error {
 	//Add station config to "containers"
 	a.containers[config.ContainerID] = config
 
@@ -74,31 +74,30 @@ func (a *agentStub) RunStationContainer(containerID string, quiet bool) (io.Read
 	return output, nil
 }
 
-func (a *agentStub) DestroyStationContainer(containerID string) (error) {
+func (a *agentStub) DestroyStationContainer(containerID string) error {
 	//Delete container with containerID
 	delete(a.containers, containerID)
 
 	return nil
 }
 
-func (a *agentStub) SaveStationContainer(containerID, imageID string) (error) {
+func (a *agentStub) SaveStationContainer(containerID, imageID string) error {
 	//Add a new image with specified id
 	a.images[imageID] = imageStub{}
 
 	return nil
 }
 
-
 // Testing the conmaker
 
 const filePath = "/../../testdata/Conmakefile.yaml"
 
 var aStub = &agentStub{
-	images:		make(map[string]imageStub),
-	containers:	make(map[string]agent.StationConfig),
+	images:     make(map[string]imageStub),
+	containers: make(map[string]agent.StationConfig),
 }
 
-func getConmaker() (*conmaker.Conmaker) {
+func getConmaker() *conmaker.Conmaker {
 
 	//Reading the conmakefile
 	// - getting path
@@ -138,7 +137,7 @@ func TestInitStation(t *testing.T) {
 	}
 
 	//Check that the base image of the station is present
-	if _, ok  := aStub.images["gcc:latest"]; !ok {
+	if _, ok := aStub.images["gcc:latest"]; !ok {
 		t.Fail()
 	}
 }
@@ -158,10 +157,3 @@ func TestDeleteStation(t *testing.T) {
 		t.Fail()
 	}
 }
-
-
-
-
-
-
-
