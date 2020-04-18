@@ -178,7 +178,7 @@ func (cm *Conmaker) InitStation(station string) error {
 	}
 
 	//Run initialization script
-	err = cm.runStation(config, false)
+	err = cm.runStation(config, true)
 
 	if err != nil {
 		return err
@@ -239,10 +239,12 @@ func (cm *Conmaker) runStation(config agent.StationConfig, quiet bool) error {
 		return err
 	}
 
-	//Printing output to console
-	buf := new(bytes.Buffer)
-	buf.ReadFrom(output)
-	fmt.Print(buf.String())
+	if (!quiet) {
+		//Printing output to console
+		buf := new(bytes.Buffer)
+		buf.ReadFrom(output)
+		fmt.Print(buf.String())
+	}
 
 	return err
 }
@@ -320,7 +322,7 @@ func (cm *Conmaker) generateArgs(script []string) []string {
 		return args
 	}
 
-	return nil
+	return []string{"pwd"}
 }
 
 // Static functions
