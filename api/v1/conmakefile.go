@@ -19,9 +19,13 @@ package v1
 
 //Conmakefile models the YAML Object of a Conmakefile
 type Conmakefile struct {
+	//Version is the API version of the used conmake file
 	Version      string                 `yaml:"version"`
+	//Project is the name of the project
 	Project      string                 `yaml:"project"`
+	//Steps is a list of 'targets'
 	Steps        map[string]Step        `yaml:"steps"`
+	//Workstations is a list of 'stations' to run steps on
 	Workstations map[string]Workstation `yaml:"workstations"`
 }
 
@@ -33,7 +37,8 @@ type Step struct {
 
 //Workstation models the YAML Object of a workstation inside a Conmakefile
 type Workstation struct {
+	//Base is the base image identifier for the workstation
 	Base     string   `yaml:"base"`
-	Autoinit bool     `yaml:"autoinit"`
+	//Script is the initialization script for the workstation (optional)
 	Script   []string `yaml:"preparation"`
 }
