@@ -107,7 +107,7 @@ func (a *DockerAgent) CreateStationContainer(config agent.StationConfig) error {
 		})
 	}
 
-	//Prepareing hostConfig
+	//Preparing hostConfig
 	hostConfig := &container.HostConfig{
 		Mounts: mounts,
 	}
