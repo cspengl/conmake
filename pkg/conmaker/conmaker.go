@@ -20,6 +20,7 @@ package conmaker
 import (
 	"bytes"
 	"errors"
+	"strings"
 	"fmt"
 	"io"
 
@@ -32,11 +33,18 @@ import (
 )
 
 const (
-	//CONMAKEREF defines the conmake station image reference
+	// CONMAKEREF defines the conmake station image reference
 	CONMAKEREF = "conmake"
 
-	//WORKDIR defines the conmake working directory in the station container
+	// WORKDIR defines the conmake working directory in the station container
 	WORKDIR = "/workspace/"
+
+	// SCRIPT_BASE defines the base command for executing 'shell' script on
+	// a station
+	SCRIPT_BASE ="sh -c"
+
+	//SCRIPT_DEFAULT sets the default script if there is no script provided
+	SCRIPT_DEFAULT = "pwd"
 )
 
 // Conmaker models the conmaker based on an agent to use, a conmakefile and
@@ -304,7 +312,7 @@ func (cm *Conmaker) generateArgs(script []string) []string {
 	if len(script) != 0 {
 
 		//Creating new shell
-		args := []string{"sh", "-c"}
+		args := strings.Fields(SCRIPT_BASE)
 
 		//oneLineScript
 		oneLineScript := ""
@@ -322,7 +330,7 @@ func (cm *Conmaker) generateArgs(script []string) []string {
 		return args
 	}
 
-	return []string{"pwd"}
+	return strings.Fields(SCRIPT_DEFAULT)
 }
 
 // Static functions
