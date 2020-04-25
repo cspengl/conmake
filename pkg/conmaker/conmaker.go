@@ -135,7 +135,9 @@ func (cm *Conmaker) PerformStep(step string) error {
 	}
 
 	//Destroy station container
-	err = cm.agent.DestroyStationContainer(containerID)
+	if err = cm.agent.DestroyStationContainer(containerID); err != nil {
+		return err
+	}
 
 	//Closing the output
 	return cm.output.Close()
@@ -347,15 +349,15 @@ func (cm *Conmaker) generateArgs(script []string) []string {
 
 //Printing functions
 func (cm *Conmaker) print(a ...interface{}) (int, error) {
-	return fmt.Fprint(cm.output, a)
+	return fmt.Fprint(cm.output, a...)
 }
 
 func (cm *Conmaker) printf(format string, a ...interface{}) (int, error) {
-	return fmt.Fprintf(cm.output, format, a)
+	return fmt.Fprintf(cm.output, format, a...)
 }
 
 func (cm *Conmaker) println(a ...interface{}) (int, error) {
-	return fmt.Fprintln(cm.output, a)
+	return fmt.Fprintln(cm.output, a...)
 }
 
 // Static functions

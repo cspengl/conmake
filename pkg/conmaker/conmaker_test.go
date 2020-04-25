@@ -88,6 +88,12 @@ func (a *agentStub) SaveStationContainer(containerID, imageID string) error {
 	return nil
 }
 
+type discardCloser struct {
+	io.Writer
+}
+
+func (discardCloser) Close() error {return nil}
+
 // Testing the conmaker
 
 const filePath = "/../../testdata/Conmakefile.yaml"
@@ -108,7 +114,8 @@ func getConmaker() *conmaker.Conmaker {
 	return conmaker.NewConmaker(
 		aStub,
 		conmakefile,
-		"")
+		"",
+		discardCloser{ioutil.Discard})
 }
 
 func TestPerformStep(t *testing.T) {
