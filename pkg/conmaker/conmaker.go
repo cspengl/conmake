@@ -18,7 +18,6 @@ limitations under the License.
 package conmaker
 
 import (
-	"bytes"
 	"errors"
 	"strings"
 	"fmt"
@@ -53,15 +52,17 @@ type Conmaker struct {
 	agent       agent.Agent
 	conmakefile *v1.Conmakefile
 	projectpath string
+	output		io.WriteCloser
 }
 
 // NewConmaker returns an instance of Conmaker based on existing agent and conmakefile
-func NewConmaker(a agent.Agent, c *v1.Conmakefile, p string) *Conmaker {
+func NewConmaker(a agent.Agent, c *v1.Conmakefile, p string, o io.WriteCloser) *Conmaker {
 
 	return &Conmaker{
 		agent:       a,
 		conmakefile: c,
 		projectpath: p,
+		output:		 o,
 	}
 }
 
@@ -69,6 +70,8 @@ func NewConmaker(a agent.Agent, c *v1.Conmakefile, p string) *Conmaker {
 
 // PerformStep performs a step specified in a Conmakefile
 func (cm *Conmaker) PerformStep(step string) error {
+
+	cm.printf("Performing step %s\n", step)
 
 	//Validate step
 	valid := cm.validateStep(step)
@@ -117,8 +120,8 @@ func (cm *Conmaker) PerformStep(step string) error {
 			Terminal: true,
 			Cwd:      WORKDIR,
 			User: ocispec.User{
-				UID: 1,
-				GID: 1,
+				UID: 1000,
+				GID: 1000,
 			},
 			Args: cm.generateArgs(stepdef.Script),
 		},
@@ -131,13 +134,18 @@ func (cm *Conmaker) PerformStep(step string) error {
 		return err
 	}
 
-	//Destroy station
-	return cm.agent.DestroyStationContainer(containerID)
+	//Destroy station container
+	err = cm.agent.DestroyStationContainer(containerID)
+
+	//Closing the output
+	return cm.output.Close()
 }
 
 // InitStation initializes station and leaves a new image stored in the
 // underlying image store
 func (cm *Conmaker) InitStation(station string) error {
+
+	cm.printf("Initializing station %s \n", station)
 
 	//Validate station
 	valid := cm.validateStation(station)
@@ -186,7 +194,7 @@ func (cm *Conmaker) InitStation(station string) error {
 	}
 
 	//Run initialization script
-	err = cm.runStation(config, true)
+	err = cm.runStation(config, false)
 
 	if err != nil {
 		return err
@@ -200,7 +208,13 @@ func (cm *Conmaker) InitStation(station string) error {
 	}
 
 	//Destroy station container
-	return cm.agent.DestroyStationContainer(containerID)
+	err = cm.agent.DestroyStationContainer(containerID)
+
+	//Closing the output
+	defer cm.output.Close()
+
+	
+	return err
 }
 
 // DeleteStation deletes a workstation of the Conmakefile associated to the Conmaker
@@ -248,10 +262,8 @@ func (cm *Conmaker) runStation(config agent.StationConfig, quiet bool) error {
 	}
 
 	if (!quiet) {
-		//Printing output to console
-		buf := new(bytes.Buffer)
-		buf.ReadFrom(output)
-		fmt.Print(buf.String())
+		//Piping output to client
+		io.Copy(cm.output, output)
 	}
 
 	return err
@@ -331,6 +343,19 @@ func (cm *Conmaker) generateArgs(script []string) []string {
 	}
 
 	return strings.Fields(SCRIPT_DEFAULT)
+}
+
+//Printing functions
+func (cm *Conmaker) print(a ...interface{}) (int, error) {
+	return fmt.Fprint(cm.output, a)
+}
+
+func (cm *Conmaker) printf(format string, a ...interface{}) (int, error) {
+	return fmt.Fprintf(cm.output, format, a)
+}
+
+func (cm *Conmaker) println(a ...interface{}) (int, error) {
+	return fmt.Fprintln(cm.output, a)
 }
 
 // Static functions

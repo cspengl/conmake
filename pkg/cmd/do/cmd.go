@@ -18,6 +18,9 @@ limitations under the License.
 package do
 
 import (
+	"io"
+	"os"
+
 	"github.com/spf13/cobra"
 
 	"github.com/cspengl/conmake/pkg/cmd/utils"
@@ -29,19 +32,27 @@ var DoCmd = &cobra.Command{
 	Short: "Performs stepname from Conmakefile",
 	Args:  cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
-		run(args)
+		run(args[0])
 	},
 }
 
-func run(args []string) {
-	cm, err := utils.ConmakerFromCmd()
-	if err != nil {
-		panic(err)
-	}
-
-	err = cm.PerformStep(args[0])
+func run(step string) {
+	cm, output, err := utils.ConmakerFromCmd()
 
 	if err != nil {
-		panic(err)
+		panic("Failed to create conmaker")
 	}
+
+	go func() {
+		if err = cm.PerformStep(step); err != nil {
+			panic("Failed to perform step")
+	 	}
+	}()	
+
+	//Copy output to console
+	io.Copy(os.Stdout, output)
+
+	//Closing reader
+	output.Close()
+
 }

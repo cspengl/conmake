@@ -17,6 +17,9 @@ limitations under the License.
 package station
 
 import (
+	"io"
+	"os"
+
 	"github.com/spf13/cobra"
 
 	"github.com/cspengl/conmake/pkg/cmd/utils"
@@ -31,18 +34,23 @@ var initCmd = &cobra.Command{
 	},
 }
 
-func initStation(stationName string) {
+func initStation(station string) {
 
-	cm, err := utils.ConmakerFromCmd()
-
-	if err != nil {
-		panic(err)
-	}
-
-	err = cm.InitStation(stationName)
+	cm, output, err := utils.ConmakerFromCmd()
 
 	if err != nil {
-		panic(err)
+		panic("Failed to create conmaker")
 	}
 
+	go func() {
+		if err = cm.InitStation(station); err != nil {
+			panic("Failed to init station")
+		}
+	}()
+
+	//Copy ouput to stdout
+	io.Copy(os.Stdout, output)
+
+	//Closing reader
+	output.Close()
 }

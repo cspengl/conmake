@@ -17,6 +17,9 @@ limitations under the License.
 package station
 
 import (
+	"io"
+	"os"
+
 	"github.com/spf13/cobra"
 
 	"github.com/cspengl/conmake/pkg/cmd/utils"
@@ -31,16 +34,22 @@ var deleteCmd = &cobra.Command{
 	},
 }
 
-func deleteStation(stationName string) {
-	cm, err := utils.ConmakerFromCmd()
+func deleteStation(station string) {
+	cm, output, err := utils.ConmakerFromCmd()
 
 	if err != nil {
-		panic(err)
+		panic("Failed to create conmaker")
 	}
 
-	err = cm.DeleteStation(stationName)
+	go func() {
+		if err = cm.DeleteStation(station); err != nil {
+			panic("Failed to delete station")
+		}
+	}()
 
-	if err != nil {
-		panic(err)
-	}
+	//Copy output to console
+	io.Copy(os.Stdout, output)
+
+	//Closing reader
+	output.Close()
 }

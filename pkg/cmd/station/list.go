@@ -17,6 +17,8 @@ limitations under the License.
 package station
 
 import (
+	"fmt"
+
 	"github.com/spf13/cobra"
 
 	"github.com/cspengl/conmake/pkg/cmd/utils"
@@ -31,15 +33,5 @@ var listCmd = &cobra.Command{
 }
 
 func list() {
-	cm, err := utils.ConmakerFromCmd()
-
-	if err != nil {
-		panic(err)
-	}
-
-	err = cm.StationList()
-
-	if err != nil {
-		panic(err)
-	}
+	fmt.Println("Currently not implemented")
 }

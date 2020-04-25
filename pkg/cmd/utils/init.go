@@ -18,6 +18,7 @@ package utils
 
 import (
 	"os"
+	"io"
 
 	"github.com/cspengl/conmake/pkg/conmaker"
 
@@ -31,13 +32,13 @@ import (
 
 // ConmakerFromCmd offers the possibility to create a Conmaker object
 // from the current workind directory and command line flags
-func ConmakerFromCmd() (*conmaker.Conmaker, error) {
+func ConmakerFromCmd() (*conmaker.Conmaker, io.ReadCloser, error) {
 
 	//Reading Conmakefile from path
 	cmConmakefile, err := utils.ConmakefileFromFile(flags.ConmakefilePath)
 
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	//Creating agent
@@ -51,7 +52,7 @@ func ConmakerFromCmd() (*conmaker.Conmaker, error) {
 	}
 
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	//Reading project path
@@ -60,13 +61,17 @@ func ConmakerFromCmd() (*conmaker.Conmaker, error) {
 		cmProjectpath, err = os.Getwd()
 
 		if err != nil {
-			return nil, err
+			return nil, nil, err
 		}
 	}
+
+	//Creating pipe
+	cmdOutput, cmOutput := io.Pipe()
 
 	//Return conmaker
 	return conmaker.NewConmaker(
 		cmAgent,
 		cmConmakefile,
-		cmProjectpath), nil
+		cmProjectpath,
+		cmOutput), cmdOutput, nil
 }
