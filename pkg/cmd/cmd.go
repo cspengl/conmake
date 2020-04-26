@@ -19,7 +19,6 @@ limitations under the License.
 package cmd
 
 import (
-	"fmt"
 	"os"
 
 	"github.com/cspengl/conmake/pkg/cmd/do"
