@@ -3,7 +3,12 @@ install:
 	go install cmd/conmake.go
 
 build:
-	go build cmd/conmake.go
+	go build -gcflags=-trimpath=$GOPATH -asmflags=-trimpath=$GOPATH cmd/conmake.go
+
+version:
+	go build -ldflags "-X github.com/cspengl/conmake/pkg/utils.Version=$(version)" \
+	-gcflags=-trimpath=$(GOPATH) \
+	-asmflags=-trimpath=$(GOPATH) cmd/conmake.go
 
 test:
 	go test ./pkg/...

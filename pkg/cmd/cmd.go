@@ -57,7 +57,6 @@ func init() {
 //Catches potential errors and exits with code 1 on error.
 func Execute() {
 	if err := ConmakeCmd.Execute(); err != nil {
-		fmt.Println(err)
 		os.Exit(1)
 	}
 }
