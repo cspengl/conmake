@@ -229,6 +229,9 @@ func (cm *Conmaker) DeleteStation(station string) error {
 		return errors.New("Station Not Found")
 	}
 
+	//Closing the output
+	defer cm.output.Close()
+
 	return cm.agent.DeleteImage(constructStationImageID(
 		cm.conmakefile.Project, station))
 }

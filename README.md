@@ -13,7 +13,8 @@
 ---
 
 
-Hey! Thank you for visiting the repository of **conmake**! conmake is a kind of build tool similar to the well known [GNU Make](https://www.gnu.org/software/make/). But instead of running the commands of a 'target' directly on the host machine the commands defined by a *step* are executed inside a container. Therefore the tool is named **'conmake'** as a combination of **'container'** and **'make'**. To define the build steps **conmake** uses a kind of Makefile called 'Conmakefile' in a YAML format. Beside the build steps you can define so called workstations which define basically the build environment. A good analogy for these workstations are different tools like a circular saw or a vise on a working bench.
+Hey! Thank you for visiting the repository of **conmake**! conmake is a kind of build tool similar to the well known [GNU Make](https://www.gnu.org/software/make/). But instead of running the commands of a 'target' directly on the host machine the commands defined by a *step* are executed inside a container. Therefore the tool is named **'conmake'** as a combination of **'container'** and **'make'**.  
+To define the build steps **conmake** uses a kind of Makefile called 'Conmakefile' in a YAML format. Beside the build steps you can define so called workstations which define basically the build environment. A good analogy for these workstations are different tools like a circular saw or a vise on a working bench.
 
 ... Ok, but why?
 
@@ -58,11 +59,7 @@ Since there is actually no release of conmake you have to compile it from source
       $ go get github.com/cspengl/conmake
       ```
   2. Go to `$GOPATH/src/github.com/cspengl/conmake`
-  3. Install dependencies with:  
-      ```bash
-      $ dep ensure
-      ```
-  4. Install it with:
+  3. Install it with:
       ```bash
       $ go install cmd/conmake.go
       ```
@@ -102,7 +99,7 @@ $ conmake do <buildstep>
 
 ## Contributing
 
-I am happy about any kind of feedback, feature or improvement ideas you have. If you want to contribute please follow the very common workflow:
+I am happy about any kind of feedback, feature or improvement ideas you have. If you want to contribute please follow the very common (gitflow) workflow:
 
   1. Fork the project
   2. Implement your ideas/changes
