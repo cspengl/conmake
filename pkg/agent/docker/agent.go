@@ -17,6 +17,7 @@ limitations under the License.
 package docker
 
 import (
+	"context"
 	"fmt"
 	"errors"
 	"strings"
@@ -31,8 +32,6 @@ import (
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/api/types/mount"
 	"github.com/docker/docker/client"
-
-	"golang.org/x/net/context"
 )
 
 //DockerAgent models the docker agent and contains the docker client and
