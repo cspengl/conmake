@@ -4,7 +4,7 @@ project: testapp
 
 steps:
   build:
-    workstation: building
+    workstation: gcc:latest
     script:
       - ls -al /
       - gcc -static -o testapp testapp.c
@@ -21,4 +21,5 @@ workstations:
   running:
     base: ubuntu:18.04
     preparation:
+      - pwd
 ...

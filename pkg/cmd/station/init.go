@@ -44,7 +44,8 @@ func initStation(station string) {
 
 	go func() {
 		if err = cm.InitStation(station); err != nil {
-			panic("Failed to init station")
+			//panic(err)
+			//panic("Failed to init station")
 		}
 	}()
 

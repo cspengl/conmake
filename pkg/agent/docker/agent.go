@@ -17,8 +17,13 @@ limitations under the License.
 package docker
 
 import (
+	"fmt"
 	"errors"
+	"strings"
+	"os"
+	"archive/tar"
 	"io"
+	"path/filepath"
 
 	"github.com/cspengl/conmake/pkg/agent"
 
@@ -43,6 +48,7 @@ const (
 	localEndpoint = "local"
 	unixSocket    = "unix:///var/run/docker.sock"
 	imagePrefix   = "docker.io"
+	tmpDockerfile = "tmpDockerfile"
 )
 
 //NewDockerAgent creates new docker agent based on an endpoint and a API version
@@ -183,17 +189,57 @@ func (a *DockerAgent) DestroyStationContainer(containerID string) error {
 	)
 }
 
-// SaveStationContainer commits an existing station container specified
-// by a containerID to a new image specified by ImageID
-func (a *DockerAgent) SaveStationContainer(containerID, imageID string) error {
+func (a *DockerAgent) BuildStation(imageID string, config agent.StationConfig) (error) {
+	
+	//Getting a dockerfile from the given config
+	err, dockerfile := configToDockerfile(config)
 
-	_, err := a.client.ContainerCommit(
+	if err != nil {
+		return err
+	}
+
+	//Write dockerfile to temporary file
+	err = writeDockerfile(dockerfile)
+
+	if err != nil {
+		return err
+	}
+
+	//Get cwd
+	cwd, err := os.Getwd()
+
+	if err != nil {
+		return err
+	}
+
+	//taring cwd
+	bCtx, err := tarBuildContext(cwd)
+
+	if err != nil {
+		return err
+	}
+
+	res, err := a.client.ImageBuild(
 		a.ctx,
-		containerID,
-		types.ContainerCommitOptions{
-			Reference: imagePrefix + "/" + imageID,
+		bCtx,
+		types.ImageBuildOptions{
+			Tags: []string{imageID},
 		},
 	)
+
+	if err != nil {
+		return err
+	}
+
+	outputbuffer := make([]byte, 32*2048)
+	for {
+		_, readerError := res.Body.Read(outputbuffer)
+		if readerError != nil {
+			if readerError == io.EOF {break}
+		}
+	}
+
+	defer os.Remove("Dockerfile")
 
 	return err
 }
@@ -225,12 +271,29 @@ func (a *DockerAgent) ImagePresent(imageID string) (bool, error) {
 }
 
 // DownloadImage downloads an image from the official Docker Registry
-func (a *DockerAgent) DownloadImage(imageID string) (io.ReadCloser, error) {
-	return a.client.ImagePull(
+func (a *DockerAgent) DownloadImage(imageID string) (error) {
+	progress, err := a.client.ImagePull(
 		a.ctx,
 		imagePrefix+"/library/"+imageID,
 		types.ImagePullOptions{},
 	)
+
+	if err != nil {
+		return err
+	}
+
+	progressBuffer := make([]byte, 32*2048)
+	for {
+		_, downloadErr := progress.Read(progressBuffer)
+		if downloadErr != nil {
+			if downloadErr == io.EOF {
+				break
+			}
+		}
+	}
+	
+	defer progress.Close()
+	return err
 }
 
 // DeleteImage deletes an image specified by a imageID
@@ -272,4 +335,95 @@ func (a *DockerAgent) findDockerID(containerName string) (string, error) {
 	}
 
 	return "", errors.New("Container not found")
+}
+
+func configToDockerfile(c agent.StationConfig) (error, string) {
+
+	//FROM c.Base
+	from := fmt.Sprintf("FROM %s\n", c.ImageID)
+	
+	//RUN c.Cmd
+	cmd := fmt.Sprintf("RUN %s\n", strings.Join(c.Process.Args, " "))
+
+	return nil, fmt.Sprintf("%s%s",from,cmd)
+}
+
+func writeDockerfile(dockerfile string) (error) {
+
+	//Creat file
+	df, err := os.Create("Dockerfile")
+
+	if err != nil {
+		return err
+	}
+
+	defer df.Close()
+
+	df.WriteString(dockerfile)
+
+	df.Sync()
+
+	df.Close()
+
+	return nil
+}
+
+func tarBuildContext(path string) (io.Reader, error) {
+
+	pReader, pWriter := io.Pipe()
+
+	tWriter := tar.NewWriter(pWriter)
+
+	var err error
+	go func() {	
+
+		defer pWriter.Close()
+		defer tWriter.Close()
+
+		err = filepath.Walk(path, func(file string, fi os.FileInfo, err error) error {
+
+			if err != nil {
+				return err
+			}
+
+			if !fi.Mode().IsRegular() {
+				return nil
+			}
+
+			//create tar header
+			tarHeader, err := tar.FileInfoHeader(fi, fi.Name())
+				
+			if err != nil {
+				return err
+			}
+
+			// update the name to correctly reflect the desired destination when untaring
+			tarHeader.Name = strings.TrimPrefix(strings.Replace(file, path, "", -1), string(filepath.Separator))
+
+			//write header
+			if err := tWriter.WriteHeader(tarHeader); err != nil {
+				return err
+			}
+
+			//open file
+			f, err := os.Open(file)
+			if err != nil {
+				return err
+			}
+
+			//copy file data to tar writer
+			if _, err := io.Copy(tWriter, f); err != nil {
+				return err
+			}
+
+			f.Close()
+
+			return nil
+		})
+	}()
+
+	if err != nil {
+		return nil, err
+	}
+	return pReader, nil
 }

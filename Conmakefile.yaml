@@ -1,0 +1,11 @@
+---
+version: v1
+project: conmake
+
+steps:
+  build:
+    workstation: golang:alpine
+    script:
+      - mkdir -p $GOPATH/src/github.com/cspengl/conmake
+      - ln -s /workspace/* $GOPATH/src/github.com/cspengl/conmake
+      - go build -gcflags=-trimpath=$GOPATH -asmflags=-trimpath=$GOPATH cmd/conmake.go

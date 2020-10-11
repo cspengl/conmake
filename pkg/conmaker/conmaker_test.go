@@ -44,14 +44,11 @@ func (a *agentStub) ImagePresent(imageID string) (bool, error) {
 	return ok, nil
 }
 
-func (a *agentStub) DownloadImage(imageID string) (io.ReadCloser, error) {
+func (a *agentStub) DownloadImage(imageID string) (error) {
 	//Add empty struct at imageID
 	a.images[imageID] = imageStub{}
 
-	//Construct download reader
-	progress := ioutil.NopCloser(bytes.NewReader([]byte("Image downloaded")))
-
-	return progress, nil
+	return nil
 }
 
 func (a *agentStub) DeleteImage(imageID string) error {
@@ -81,7 +78,12 @@ func (a *agentStub) DestroyStationContainer(containerID string) error {
 	return nil
 }
 
-func (a *agentStub) SaveStationContainer(containerID, imageID string) error {
+func (a *agentStub) BuildStation(imageID string, config agent.StationConfig) error {
+
+	if _, ok := a.images[config.ImageID]; !ok {
+		a.images[config.ImageID] = imageStub{}
+	}
+
 	//Add a new image with specified id
 	a.images[imageID] = imageStub{}
 
@@ -144,17 +146,17 @@ func TestInitStation(t *testing.T) {
 
 	//Check that there is no error
 	if err != nil {
-		t.Fail()
+		t.Fatal("Error init")
 	}
 
 	//Check that there is a prepared station image
 	if _, ok := aStub.images["testapp/building:conmake"]; !ok {
-		t.Fail()
+		t.Fatal("Image does not exist")
 	}
 
 	//Check that the base image of the station is present
 	if _, ok := aStub.images["gcc:latest"]; !ok {
-		t.Fail()
+		t.Fatal("Base image not present")
 	}
 }
 

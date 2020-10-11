@@ -19,6 +19,7 @@ package do
 
 import (
 	"io"
+	"fmt"
 	"os"
 
 	"github.com/spf13/cobra"
@@ -45,7 +46,8 @@ func run(step string) {
 
 	go func() {
 		if err = cm.PerformStep(step); err != nil {
-			panic("Failed to perform step")
+			fmt.Println("Failed to perform step")
+			os.Exit(1)
 	 	}
 	}()	
 

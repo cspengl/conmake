@@ -27,8 +27,6 @@ import (
 	"github.com/cspengl/conmake/pkg/agent"
 
 	ocispec "github.com/opencontainers/runtime-spec/specs-go"
-
-	"github.com/tj/go-spin"
 )
 
 const (
@@ -40,7 +38,7 @@ const (
 
 	// SCRIPT_BASE defines the base command for executing 'shell' script on
 	// a station
-	SCRIPT_BASE ="sh -c"
+	SCRIPT_BASE ="/bin/sh -c"
 
 	//SCRIPT_DEFAULT sets the default script if there is no script provided
 	SCRIPT_DEFAULT = "pwd"
@@ -71,7 +69,7 @@ func NewConmaker(a agent.Agent, c *v1.Conmakefile, p string, o io.WriteCloser) *
 // PerformStep performs a step specified in a Conmakefile
 func (cm *Conmaker) PerformStep(step string) error {
 
-	cm.printf("Performing step %s\n", step)
+	cm.printf("Performing step [%s]\n", step)
 
 	//Validate step
 	valid := cm.validateStep(step)
@@ -83,28 +81,16 @@ func (cm *Conmaker) PerformStep(step string) error {
 	//Retrieving step definition
 	stepdef := cm.conmakefile.Steps[step]
 
-	//Defining station image id
-	stationImageID := constructStationImageID(cm.conmakefile.Project, stepdef.Workstation)
-
-	//Check if station is initialized
-	stationPresent, err := cm.agent.ImagePresent(stationImageID)
+	//Prepare station for step 
+	stationImageID, err := cm.prepareStation(stepdef)
 
 	if err != nil {
-		return err
-	}
-
-	//If station not present init station
-	if !stationPresent {
-		err := cm.InitStation(stepdef.Workstation)
-
-		if err != nil {
-			return err
-		}
+		return errors.New("Failed to prepare station image")
 	}
 
 	//Construct containerID
 	containerID := constructStationContainerID(
-		cm.conmakefile.Project, stepdef.Workstation)
+		cm.conmakefile.Project, step)
 
 	//Create station config
 	config := agent.StationConfig{
@@ -128,11 +114,22 @@ func (cm *Conmaker) PerformStep(step string) error {
 	}
 
 	//Run station to perform step
-	err = cm.runStation(config, false)
+	//Creating station container
+	err = cm.agent.CreateStationContainer(config)
 
 	if err != nil {
 		return err
 	}
+
+	//Running the station container
+	output, err := cm.agent.RunStationContainer(config.ContainerID, false)
+
+	if err != nil {
+		return err
+	}
+
+	//Piping output to client
+	io.Copy(cm.output, output)
 
 	//Destroy station container
 	if err = cm.agent.DestroyStationContainer(containerID); err != nil {
@@ -147,76 +144,31 @@ func (cm *Conmaker) PerformStep(step string) error {
 // underlying image store
 func (cm *Conmaker) InitStation(station string) error {
 
-	cm.printf("Initializing station %s \n", station)
+	cm.printf("Initializing station [%s]...\n", station)
 
 	//Validate station
 	valid := cm.validateStation(station)
 
 	if !valid {
-		return errors.New("Station not found")
+		return fmt.Errorf("Station [%s] not found\n", station)
 	}
 
 	//Retrieve Station definition
 	stationdef := cm.conmakefile.Workstations[station]
-	containerID := constructStationContainerID(
-		cm.conmakefile.Project, station)
-	imageID := constructStationImageID(
-		cm.conmakefile.Project, station)
-
-	//Check if there is an existing station
-	oldStationPresent, err := cm.agent.ImagePresent(imageID)
-
-	if err != nil {
-		return err
-	}
-
-	//Deleting old station
-	if oldStationPresent {
-		err = cm.DeleteStation(station)
-
-		if err != nil {
-			return err
-		}
-	}
-
-	//Construct station config
-	config := agent.StationConfig{
-		ContainerID: containerID,
-		ImageID:     stationdef.Base,
-		Mounts:      []ocispec.Mount{},
-		Process: ocispec.Process{
-			Terminal: true,
-			Cwd:      WORKDIR,
-			User: ocispec.User{
-				UID: 1000,
-				GID: 1000,
-			},
-			Args: cm.generateArgs(stationdef.Script),
-		},
-	}
-
-	//Run initialization script
-	err = cm.runStation(config, false)
-
-	if err != nil {
-		return err
-	}
-
-	//Save container state to new image
-	err = cm.agent.SaveStationContainer(containerID, imageID)
-
-	if err != nil {
-		return err
-	}
-
-	//Destroy station container
-	err = cm.agent.DestroyStationContainer(containerID)
-
-	//Closing the output
-	defer cm.output.Close()
 
 	
+	err := cm.buildStation(station, stationdef); 
+	
+	if err != nil  {
+		return fmt.Errorf("Failed to initialize station [%s]\n", station)
+	}
+	
+	defer cm.output.Close()
+
+	cm.printf("Successfully initialized station [%s]\n", station)
+
 	return err
+	
 }
 
 // DeleteStation deletes a workstation of the Conmakefile associated to the Conmaker
@@ -243,71 +195,101 @@ func (cm *Conmaker) StationList() error {
 
 // Private functions
 
-func (cm *Conmaker) runStation(config agent.StationConfig, quiet bool) error {
+func (cm *Conmaker) prepareStation(step v1.Step) (string, error) {
+	//Defining station image id
+	stationImageID := constructStationImageID(cm.conmakefile.Project, step.Workstation)
 
-	//Preparing station
-	err := cm.prepareStation(config)
 
-	if err != nil {
-		return err
-	}
-
-	//Creating station container
-	err = cm.agent.CreateStationContainer(config)
+	//Check if station is initialized
+	stationPresent, err := cm.agent.ImagePresent(stationImageID)
 
 	if err != nil {
-		return err
+		return "", err
 	}
 
-	//Running the station container
-	output, err := cm.agent.RunStationContainer(config.ContainerID, quiet)
+	//If station not present init station
+	if !stationPresent {
 
-	if err != nil {
-		return err
+		valid := cm.validateStation(step.Workstation)
+
+		if valid {
+			err := cm.buildStation(step.Workstation, cm.conmakefile.Workstations[step.Workstation])
+
+			if err != nil {
+				return "", err
+			}
+		} else {
+
+			stationImageID = step.Workstation
+
+			stationPresent, err = cm.agent.ImagePresent(step.Workstation)
+
+			if err != nil {
+				return "", err
+			}
+
+			if !stationPresent {
+				cm.printf("Station: %s not found locally, trying to download...\n", step.Workstation)
+				cm.println("Downloading image...")
+				err = cm.agent.DownloadImage(step.Workstation)
+
+				if err != nil {
+					return "", err
+				}
+			}
+		}
 	}
 
-	if (!quiet) {
-		//Piping output to client
-		io.Copy(cm.output, output)
-	}
-
-	return err
+	return stationImageID, nil
 }
 
-func (cm *Conmaker) prepareStation(config agent.StationConfig) error {
+func (cm *Conmaker) buildStation(station string, stationdef v1.Workstation) (error) {
 
-	imagePresent, err := cm.agent.ImagePresent(config.ImageID)
+	imageID := constructStationImageID(
+		cm.conmakefile.Project, station)
+
+	containerID := constructStationContainerID(
+		cm.conmakefile.Project, station)
+
+	//Check if there is an existing station
+	oldStationPresent, err := cm.agent.ImagePresent(imageID)
 
 	if err != nil {
 		return err
 	}
 
-	if !imagePresent {
-
-		progress, err := cm.agent.DownloadImage(config.ImageID)
+	//Deleting old station
+	if oldStationPresent {
+		err = cm.agent.DeleteImage(imageID)
 
 		if err != nil {
 			return err
 		}
-
-		progressBuffer := make([]byte, 32*2048)
-		downloadSpinner := spin.New()
-		for {
-			_, downloadErr := progress.Read(progressBuffer)
-			if downloadErr != nil {
-				if downloadErr == io.EOF {
-					break
-				}
-			}
-			fmt.Printf("\rDownloading image %s", downloadSpinner.Next())
-		}
-
-		//clearing console
-		fmt.Println("")
-		defer progress.Close()
 	}
 
-	return err
+	//Construct station config
+	buildConfig := agent.StationConfig{
+		ContainerID: containerID,
+		ImageID: stationdef.Base,
+		Mounts: []ocispec.Mount{{
+			Destination: WORKDIR,
+			Type:        "bind",
+			Source:      cm.projectpath,
+			Options:     []string{"rw", "rbind"},
+		}},
+		Process: ocispec.Process{
+			Terminal: true,
+			Cwd:      WORKDIR,
+			User: ocispec.User{
+				UID: 1000,
+				GID: 1000,
+			},
+			Args: cm.generateArgs(stationdef.Script),
+		},
+	}
+
+	//Build station
+	return cm.agent.BuildStation(imageID, buildConfig)
 }
 
 func (cm *Conmaker) validateStep(step string) bool {
@@ -356,6 +338,7 @@ func (cm *Conmaker) print(a ...interface{}) (int, error) {
 }
 
 func (cm *Conmaker) printf(format string, a ...interface{}) (int, error) {
+	format = fmt.Sprintf("%s> %s", CONMAKEREF, format)
 	return fmt.Fprintf(cm.output, format, a...)
 }
 
@@ -366,9 +349,9 @@ func (cm *Conmaker) println(a ...interface{}) (int, error) {
 // Static functions
 
 func constructStationContainerID(project, station string) string {
-	return project + "-" + station
+	return fmt.Sprintf("%s-%s", project, station)
 }
 
 func constructStationImageID(project, station string) string {
-	return project + "/" + station + ":" + CONMAKEREF
+	return fmt.Sprintf("%s/%s:%s", project, station, CONMAKEREF)
 }

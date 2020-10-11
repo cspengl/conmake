@@ -47,22 +47,20 @@ type StationConfig struct {
 }
 
 // Agent defines a generic interface for working with
-// station containers on an OCI runtime
+// station containers on an OCI runtime + OCI image tool
 type Agent interface {
 	// ImagePresent returns if an image specific by imageID exists.
 	ImagePresent(imageID string) (bool, error)
-	// DownloadImage downloads an image specified by imageID and returns
-	// a io.ReadCloser for processing the download (e.g. progress)
-	DownloadImage(imageID string) (io.ReadCloser, error)
+	// DownloadImage downloads an image specified by imageID
+	DownloadImage(imageID string) (error)
 	// DeleteImage deletes an image from the image store by a given id
-	DeleteImage(imageID string) error
+	DeleteImage(imageID string) (error)
 	// CreateStationContainer creates a container based on a StationConfig.
-	CreateStationContainer(config StationConfig) error
+	CreateStationContainer(config StationConfig) (error)
 	// RunStationContainer runs a created station container specified by a containerID
 	RunStationContainer(containerID string, quiet bool) (io.ReadCloser, error)
 	// DestroyStationContainer destroys a station container specified by a containerID
-	DestroyStationContainer(containerID string) error
-	// SaveStationContainer saves a stopped station container specified by
-	// a containerID as a new image with the given imageID
-	SaveStationContainer(containerID, imageID string) error
+	DestroyStationContainer(containerID string) (error)
+	// BuildStationContainer builds a station container based on a station build config
+	BuildStation(imageID string, config StationConfig) (error)
 }
