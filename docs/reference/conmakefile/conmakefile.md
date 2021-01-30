@@ -9,13 +9,14 @@ project: <projectname>
 
 steps:
   <step1>:
-    workstation: <stationname>
+    workstation: <stationname>||<imageref>
     script:
       - <list of commands>
       - #...
   <step2>:
     #...
 
+# [optional]
 workstations:
   <workstation1>:
     base: <base image>
@@ -58,7 +59,7 @@ workstations:
   | `version` | Version of the makefile (currently does not have an effect)|
   | `projectname` | Name of the project |
   | `steps` | Define build steps (see table below) |
-  | `workstations` | Define workstations (see table below) |
+  | `workstations` | Define workstations (see table below) [Optional]|
 
 - **Steps**  
 
