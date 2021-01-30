@@ -17,8 +17,8 @@ limitations under the License.
 package utils
 
 import (
-	"os"
 	"io"
+	"os"
 
 	"github.com/cspengl/conmake/pkg/conmaker"
 
@@ -43,10 +43,7 @@ func ConmakerFromCmd() (*conmaker.Conmaker, io.ReadCloser, error) {
 
 	//Creating agent
 	var cmAgent agent.Agent
-	switch agent.AgentSign(flags.Agent) {
-	case agent.SIGN_DOCKER:
-		cmAgent, err = docker.NewDockerAgentFromEnv()
-		break
+	switch agent.AgentSign("docker") {
 	default:
 		cmAgent, err = docker.NewDockerAgentFromEnv()
 	}
