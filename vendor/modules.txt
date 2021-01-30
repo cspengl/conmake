@@ -3,7 +3,6 @@
 github.com/Microsoft/go-winio
 github.com/Microsoft/go-winio/pkg/guid
 # github.com/cpuguy83/go-md2man v1.0.10
-## explicit
 github.com/cpuguy83/go-md2man/md2man
 # github.com/docker/distribution v2.7.1+incompatible
 ## explicit
@@ -36,7 +35,6 @@ github.com/docker/go-connections/tlsconfig
 ## explicit
 github.com/docker/go-units
 # github.com/inconshreveable/mousetrap v1.0.0
-## explicit
 github.com/inconshreveable/mousetrap
 # github.com/opencontainers/go-digest v1.0.0-rc1
 ## explicit
@@ -45,10 +43,8 @@ github.com/opencontainers/go-digest
 ## explicit
 github.com/opencontainers/runtime-spec/specs-go
 # github.com/pkg/errors v0.8.1
-## explicit
 github.com/pkg/errors
 # github.com/russross/blackfriday v1.5.2
-## explicit
 github.com/russross/blackfriday
 # github.com/spf13/cobra v0.0.5
 ## explicit
@@ -57,8 +53,6 @@ github.com/spf13/cobra/doc
 # github.com/spf13/pflag v1.0.5
 ## explicit
 github.com/spf13/pflag
-# github.com/tj/go-spin v1.1.0
-## explicit
 # golang.org/x/net v0.0.0-20191007182048-72f939374954
 ## explicit
 golang.org/x/net/context

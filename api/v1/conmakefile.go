@@ -24,15 +24,15 @@ type Conmakefile struct {
 	//Project is the name of the project
 	Project      string                 `yaml:"project"`
 	//Steps is a list of 'targets'
-	Steps        map[string]Step        `yaml:"steps"`
+	Steps        map[string]Step        `yaml:"steps,omitempty"`
 	//Workstations is a list of 'stations' to run steps on
-	Workstations map[string]Workstation `yaml:"workstations"`
+	Workstations map[string]Workstation `yaml:"workstations,omitempty"`
 }
 
 //Step models the YAML Object of a step inside a Conmakefile
 type Step struct {
 	Workstation string   `yaml:"workstation"`
-	Script      []string `yaml:"script"`
+	Script      []string `yaml:"script,omitempty"`
 }
 
 //Workstation models the YAML Object of a workstation inside a Conmakefile
@@ -40,5 +40,5 @@ type Workstation struct {
 	//Base is the base image identifier for the workstation
 	Base     string   `yaml:"base"`
 	//Script is the initialization script for the workstation (optional)
-	Script   []string `yaml:"preparation"`
+	Script   []string `yaml:"preparation,omitempty"`
 }

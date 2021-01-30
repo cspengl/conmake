@@ -8,6 +8,9 @@
 # Conmake binary
 conmake
 
+# Examples
+examples/testapp/testapp
+
 # Test binary, built with `go test -c`
 *.test
 
