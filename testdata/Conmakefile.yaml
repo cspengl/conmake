@@ -7,6 +7,10 @@ steps:
     workstation: building
     script:
       - gcc -static -o testapp testapp.c
+  run:
+    workstation: alpine:latest
+    script: 
+      - ./testapp
  
 workstations:
   building:

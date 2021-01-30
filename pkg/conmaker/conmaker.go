@@ -19,11 +19,11 @@ package conmaker
 
 import (
 	"errors"
-	"strings"
 	"fmt"
 	"io"
+	"strings"
 
-	"github.com/cspengl/conmake/api/v1"
+	v1 "github.com/cspengl/conmake/api/v1"
 	"github.com/cspengl/conmake/pkg/agent"
 
 	ocispec "github.com/opencontainers/runtime-spec/specs-go"
@@ -38,10 +38,10 @@ const (
 
 	// SCRIPT_BASE defines the base command for executing 'shell' script on
 	// a station
-	SCRIPT_BASE ="/bin/sh -c"
+	scriptBase = "/bin/sh -c"
 
 	//SCRIPT_DEFAULT sets the default script if there is no script provided
-	SCRIPT_DEFAULT = "pwd"
+	scriptDefault = "pwd"
 )
 
 // Conmaker models the conmaker based on an agent to use, a conmakefile and
@@ -50,7 +50,7 @@ type Conmaker struct {
 	agent       agent.Agent
 	conmakefile *v1.Conmakefile
 	projectpath string
-	output		io.WriteCloser
+	output      io.WriteCloser
 }
 
 // NewConmaker returns an instance of Conmaker based on existing agent and conmakefile
@@ -60,7 +60,7 @@ func NewConmaker(a agent.Agent, c *v1.Conmakefile, p string, o io.WriteCloser) *
 		agent:       a,
 		conmakefile: c,
 		projectpath: p,
-		output:		 o,
+		output:      o,
 	}
 }
 
@@ -81,7 +81,7 @@ func (cm *Conmaker) PerformStep(step string) error {
 	//Retrieving step definition
 	stepdef := cm.conmakefile.Steps[step]
 
-	//Prepare station for step 
+	//Prepare station for step
 	stationImageID, err := cm.prepareStation(stepdef)
 
 	if err != nil {
@@ -150,25 +150,24 @@ func (cm *Conmaker) InitStation(station string) error {
 	valid := cm.validateStation(station)
 
 	if !valid {
-		return fmt.Errorf("Station [%s] not found\n", station)
+		return fmt.Errorf("station [%s] not found", station)
 	}
 
 	//Retrieve Station definition
 	stationdef := cm.conmakefile.Workstations[station]
 
-	
-	err := cm.buildStation(station, stationdef); 
-	
-	if err != nil  {
-		return fmt.Errorf("Failed to initialize station [%s]\n", station)
+	err := cm.buildStation(station, stationdef)
+
+	if err != nil {
+		return fmt.Errorf("failed to initialize station [%s]", station)
 	}
-	
+
 	defer cm.output.Close()
 
 	cm.printf("Successfully initialized station [%s]\n", station)
 
 	return err
-	
+
 }
 
 // DeleteStation deletes a workstation of the Conmakefile associated to the Conmaker
@@ -198,7 +197,6 @@ func (cm *Conmaker) StationList() error {
 func (cm *Conmaker) prepareStation(step v1.Step) (string, error) {
 	//Defining station image id
 	stationImageID := constructStationImageID(cm.conmakefile.Project, step.Workstation)
-
 
 	//Check if station is initialized
 	stationPresent, err := cm.agent.ImagePresent(stationImageID)
@@ -243,7 +241,7 @@ func (cm *Conmaker) prepareStation(step v1.Step) (string, error) {
 	return stationImageID, nil
 }
 
-func (cm *Conmaker) buildStation(station string, stationdef v1.Workstation) (error) {
+func (cm *Conmaker) buildStation(station string, stationdef v1.Workstation) error {
 
 	imageID := constructStationImageID(
 		cm.conmakefile.Project, station)
@@ -270,7 +268,7 @@ func (cm *Conmaker) buildStation(station string, stationdef v1.Workstation) (err
 	//Construct station config
 	buildConfig := agent.StationConfig{
 		ContainerID: containerID,
-		ImageID: stationdef.Base,
+		ImageID:     stationdef.Base,
 		Mounts: []ocispec.Mount{{
 			Destination: WORKDIR,
 			Type:        "bind",
@@ -311,7 +309,7 @@ func (cm *Conmaker) generateArgs(script []string) []string {
 	if len(script) != 0 {
 
 		//Creating new shell
-		args := strings.Fields(SCRIPT_BASE)
+		args := strings.Fields(scriptBase)
 
 		//oneLineScript
 		oneLineScript := ""
@@ -329,7 +327,7 @@ func (cm *Conmaker) generateArgs(script []string) []string {
 		return args
 	}
 
-	return strings.Fields(SCRIPT_DEFAULT)
+	return strings.Fields(scriptDefault)
 }
 
 //Printing functions

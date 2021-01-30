@@ -25,11 +25,11 @@ import (
 )
 
 const (
-	filePath 		= "/../../testdata/Conmakefile.yaml"
-	invalidPath		= "/../../testdata/NotExisting.yaml"
+	filePath    = "/../../testdata/Conmakefile.yaml"
+	invalidPath = "/../../testdata/NotExisting.yaml"
 )
 
-var cwd, _ = os.Getwd() 
+var cwd, _ = os.Getwd()
 
 func TestConmakeFileFromFile(t *testing.T) {
 	_, err := utils.ConmakefileFromFile(cwd + filePath)
@@ -55,7 +55,7 @@ func TestConmakefileFromByte(t *testing.T) {
 	} else {
 		_, err := utils.ConmakefileFromByte(f)
 		if err != nil {
-			t.Fail()
+			t.Error(err)
 		}
 	}
 }

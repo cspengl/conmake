@@ -44,7 +44,7 @@ func (a *agentStub) ImagePresent(imageID string) (bool, error) {
 	return ok, nil
 }
 
-func (a *agentStub) DownloadImage(imageID string) (error) {
+func (a *agentStub) DownloadImage(imageID string) error {
 	//Add empty struct at imageID
 	a.images[imageID] = imageStub{}
 
@@ -94,7 +94,7 @@ type discardCloser struct {
 	io.Writer
 }
 
-func (discardCloser) Close() error {return nil}
+func (discardCloser) Close() error { return nil }
 
 // Testing the conmaker
 
@@ -130,6 +130,31 @@ func TestPerformStep(t *testing.T) {
 	}
 }
 
+func TestPerformStepNoWorkstation(t *testing.T) {
+	cm := getConmaker()
+
+	err := cm.PerformStep("run")
+	if err != nil {
+		t.Fail()
+	}
+
+	if _, ok := aStub.images["alpine:latest"]; !ok {
+		t.Fatal("Image has not been downloaded")
+	}
+}
+
+func TestPerformWithPresentImage(t *testing.T) {
+	cm := getConmaker()
+
+	//Downloading base image
+	aStub.DownloadImage("gcc:latest")
+
+	err := cm.PerformStep("run")
+	if err != nil {
+		t.Fail()
+	}
+}
+
 func TestPerformInvalidStep(t *testing.T) {
 	cm := getConmaker()
 
@@ -137,6 +162,10 @@ func TestPerformInvalidStep(t *testing.T) {
 	if err == nil {
 		t.Fail()
 	}
+}
+
+func TestPerformWithInvalidStation(t *testing.T) {
+
 }
 
 func TestInitStation(t *testing.T) {
