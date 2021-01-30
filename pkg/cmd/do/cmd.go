@@ -18,8 +18,8 @@ limitations under the License.
 package do
 
 import (
-	"io"
 	"fmt"
+	"io"
 	"os"
 
 	"github.com/spf13/cobra"
@@ -29,15 +29,15 @@ import (
 
 //DoCmd represents the command performing a step from a Conmakfile
 var DoCmd = &cobra.Command{
-	Use:   "do stepname",
+	Use:   "do <stepname> [args...]",
 	Short: "Performs stepname from Conmakefile",
-	Args:  cobra.ExactArgs(1),
+	Args:  cobra.MinimumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
-		run(args[0])
+		run(args[0], args[1:])
 	},
 }
 
-func run(step string) {
+func run(step string, args []string) {
 	cm, output, err := utils.ConmakerFromCmd()
 
 	if err != nil {
@@ -45,11 +45,11 @@ func run(step string) {
 	}
 
 	go func() {
-		if err = cm.PerformStep(step); err != nil {
+		if err = cm.PerformStep(step, args...); err != nil {
 			fmt.Println("Failed to perform step")
 			os.Exit(1)
-	 	}
-	}()	
+		}
+	}()
 
 	//Copy output to console
 	io.Copy(os.Stdout, output)

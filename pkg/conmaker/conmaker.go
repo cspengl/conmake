@@ -67,7 +67,7 @@ func NewConmaker(a agent.Agent, c *v1.Conmakefile, p string, o io.WriteCloser) *
 // Public functions
 
 // PerformStep performs a step specified in a Conmakefile
-func (cm *Conmaker) PerformStep(step string) error {
+func (cm *Conmaker) PerformStep(step string, args ...string) error {
 
 	cm.printf("Performing step [%s]\n", step)
 
@@ -109,7 +109,11 @@ func (cm *Conmaker) PerformStep(step string) error {
 				UID: 1000,
 				GID: 1000,
 			},
-			Args: cm.generateArgs(stepdef.Script),
+			Args: cm.generateArgs(
+				stepdef.Command,
+				stepdef.Script,
+				args...,
+			),
 		},
 	}
 
@@ -228,12 +232,13 @@ func (cm *Conmaker) prepareStation(step v1.Step) (string, error) {
 
 			if !stationPresent {
 				cm.printf("Station: %s not found locally, trying to download...\n", step.Workstation)
-				cm.println("Downloading image...")
+				cm.printf("Downloading image...\n")
 				err = cm.agent.DownloadImage(step.Workstation)
 
 				if err != nil {
 					return "", err
 				}
+				cm.printf("Download completed\n")
 			}
 		}
 	}
@@ -282,7 +287,7 @@ func (cm *Conmaker) buildStation(station string, stationdef v1.Workstation) erro
 				UID: 1000,
 				GID: 1000,
 			},
-			Args: cm.generateArgs(stationdef.Script),
+			Args: cm.generateArgs("", stationdef.Script),
 		},
 	}
 
@@ -304,12 +309,16 @@ func (cm *Conmaker) validateStation(station string) bool {
 	return true
 }
 
-func (cm *Conmaker) generateArgs(script []string) []string {
+func (cm *Conmaker) generateArgs(command string, script []string, additionalArgs ...string) []string {
 
-	if len(script) != 0 {
+	var args []string
+	if command != "" {
+		args = strings.Fields(command)
+		args = append(args, additionalArgs...)
+	} else if len(script) != 0 {
 
 		//Creating new shell
-		args := strings.Fields(scriptBase)
+		args = strings.Fields(scriptBase)
 
 		//oneLineScript
 		oneLineScript := ""
@@ -323,11 +332,9 @@ func (cm *Conmaker) generateArgs(script []string) []string {
 		oneLineScript = oneLineScript[:len(oneLineScript)-1]
 
 		args = append(args, oneLineScript)
-
-		return args
 	}
 
-	return strings.Fields(scriptDefault)
+	return args
 }
 
 //Printing functions
@@ -336,12 +343,8 @@ func (cm *Conmaker) print(a ...interface{}) (int, error) {
 }
 
 func (cm *Conmaker) printf(format string, a ...interface{}) (int, error) {
-	format = fmt.Sprintf("%s> %s", CONMAKEREF, format)
+	format = fmt.Sprintf("\033[36m%s>\033[0m %s", CONMAKEREF, format)
 	return fmt.Fprintf(cm.output, format, a...)
-}
-
-func (cm *Conmaker) println(a ...interface{}) (int, error) {
-	return fmt.Fprintln(cm.output, a...)
 }
 
 // Static functions

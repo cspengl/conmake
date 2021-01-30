@@ -13,6 +13,9 @@ steps:
     script:
       - ls -al
       - ./testapp
+  bash:
+    workstation: gcc:latest
+    command: /bin/bash -c
 
 workstations:
   building:

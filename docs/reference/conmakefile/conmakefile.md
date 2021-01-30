@@ -10,6 +10,9 @@ project: <projectname>
 steps:
   <step1>:
     workstation: <stationname>||<imageref>
+    # [either]
+    command: <command>
+    #[or]
     script:
       - <list of commands>
       - #...
@@ -41,6 +44,9 @@ steps:
     workstation: building
     script:
       - gcc -o testapp testapp.c
+  hello:
+    workstation: alpine:latest
+    command: echo "Hello World!"
 
 workstations:
   building:
@@ -66,6 +72,7 @@ workstations:
   | Field | Description |
   | ----------------------------------- | -------------------------------------------------------------- |
   | `workstation` | Name of the workstation should be used for this build step |
+  | `command` | Set to command to execute. If command is not set you have to define a script |
   | `script` | List of commands to execute on the workstation |
 
 - **Workstations**  
@@ -73,4 +80,4 @@ workstations:
   | Field | Description |
   | ----------------------------------- | -------------------------------------------------------------- |
   | `base` | Name of the base image should be used for this build step |
-  | `script` | List of commands to execute on the workstation to initialize it |  
+  | `preparation` | List of commands to execute on the workstation to initialize it |  
